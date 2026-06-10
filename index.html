@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>공공데이터로 보는 정규분포 · 탐구 도구</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --bg:#f7f6f3;
+  --surface:#ffffff;
+  --border:#e9e6e0;
+  --border-strong:#ddd9d1;
+  --ink:#1c1b19;
+  --ink-2:#56524c;
+  --ink-3:#a7a29a;
+  --accent:#3b4a63;
+  --accent-soft:#eef0f4;
+  --accent-2:#94a3b8;
+  --accent-2-soft:#eef1f6;
+  --ok:#15803d;
+  --ok-soft:#f0fdf4;
+  --warn:#b45309;
+  --warn-soft:#fffbeb;
+  --bad:#b91c1c;
+  --bad-soft:#fef2f2;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(28,27,25,.05);
+  --mono:'SF Mono',ui-monospace,'JetBrains Mono',Menlo,monospace;
+}
+.ic-svg{width:1.05em;height:1.05em;flex:none;vertical-align:-0.16em;}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;font-family:'Pretendard','Pretendard Variable',system-ui,sans-serif;
+  background:var(--bg);color:var(--ink);line-height:1.65;font-size:16px;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.01em;
+}
+.wrap{max-width:980px;margin:0 auto;padding:0 24px 120px;}
+
+/* ---------- header ---------- */
+header.top{
+  position:sticky;top:0;z-index:50;background:rgba(250,250,250,.82);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border);
+}
+.top-inner{max-width:980px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px;}
+.logo-dot{width:26px;height:26px;border-radius:8px;background:var(--accent);flex:none;}
+.top-title{font-size:15px;font-weight:700;letter-spacing:-.02em;}
+.top-sub{font-size:12px;color:var(--ink-3);font-weight:500;}
+
+/* ---------- progress stepper ---------- */
+.stepper{display:flex;gap:6px;margin:26px 0 30px;flex-wrap:wrap;}
+.step-pill{
+  flex:1;min-width:120px;display:flex;align-items:center;gap:9px;padding:10px 12px;
+  border:1px solid var(--border);border-radius:10px;background:var(--surface);
+  font-size:12.5px;font-weight:600;color:var(--ink-3);cursor:pointer;transition:.18s;
+}
+.step-pill:hover{border-color:var(--border-strong);}
+.step-pill .num{width:20px;height:20px;border-radius:50%;background:#f4f4f5;color:var(--ink-3);
+  display:grid;place-items:center;font-size:11px;font-weight:700;flex:none;transition:.18s;}
+.step-pill.active{color:var(--accent);border-color:var(--accent);background:var(--accent-soft);}
+.step-pill.active .num{background:var(--accent);color:#fff;}
+.step-pill.done .num{background:var(--ok);color:#fff;}
+.step-pill.done{color:var(--ink-2);}
+
+/* ---------- hero ---------- */
+.hero{padding:30px 0 8px;}
+.hero h1{font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1.25;margin:0 0 12px;}
+.hero h1 .hl{color:var(--accent);}
+.hero p{font-size:15.5px;color:var(--ink-2);margin:0;max-width:680px;}
+.bigq{
+  margin:22px 0 0;padding:18px 20px;border-left:3px solid var(--accent);
+  background:var(--accent-soft);border-radius:0 10px 10px 0;font-size:14.5px;color:var(--accent);font-weight:500;
+}
+
+/* ---------- stage card ---------- */
+.stage{display:none;animation:fade .35s ease;}
+.stage.show{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;margin-bottom:18px;}
+.stage-label{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--accent);
+  background:var(--accent-soft);padding:5px 11px;border-radius:99px;margin-bottom:14px;}
+.stage h2{font-size:22px;font-weight:800;letter-spacing:-.025em;margin:0 0 6px;}
+.stage .lead{font-size:15px;color:var(--ink-2);margin:0 0 4px;}
+
+.goal{display:flex;gap:11px;align-items:flex-start;margin:18px 0;padding:14px 16px;background:#fcfcfc;border:1px solid var(--border);border-radius:10px;}
+.goal .ic{font-size:16px;line-height:1.4;}
+.goal b{font-size:13.5px;}
+.goal p{margin:2px 0 0;font-size:13.5px;color:var(--ink-2);}
+
+details.hint{margin:14px 0;border:1px dashed var(--border-strong);border-radius:10px;background:#fcfcfd;overflow:hidden;}
+details.hint summary{cursor:pointer;list-style:none;padding:12px 16px;font-size:13px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:8px;}
+details.hint summary::-webkit-details-marker{display:none;}
+details.hint summary::before{content:'';width:15px;height:15px;flex:none;background-color:currentColor;-webkit-mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 18h6'/><path d='M10 22h4'/><path d='M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14'/></svg>") center/contain no-repeat;mask:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9 18h6'/><path d='M10 22h4'/><path d='M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14'/></svg>") center/contain no-repeat;}
+details.hint[open] summary{border-bottom:1px solid var(--border);}
+details.hint .body{padding:14px 16px;font-size:14px;color:var(--ink-2);}
+details.hint .body ul{margin:6px 0 0;padding-left:18px;}
+details.hint .body li{margin:5px 0;}
+
+/* always-open guide (어디서부터 시작할까) */
+.guide-open{margin:14px 0;border:1px solid var(--border);border-radius:12px;background:#fcfcfd;overflow:hidden;}
+.guide-open .gtitle{padding:13px 16px;font-size:13.5px;font-weight:700;color:var(--ink);background:var(--accent-soft);display:flex;align-items:center;gap:8px;}
+.guide-open .gbody{padding:16px;font-size:14px;color:var(--ink-2);}
+.guide-open .gbody ul{margin:4px 0 0;padding-left:18px;}
+.guide-open .gbody li{margin:6px 0;}
+.guide-open h5{margin:18px 0 8px;font-size:13.5px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:7px;}
+.linkrow{display:flex;gap:9px;flex-wrap:wrap;margin:8px 0 2px;}
+.linkbtn{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-size:13px;font-weight:700;
+  padding:9px 13px;border-radius:9px;border:1px solid var(--border-strong);background:#fff;color:var(--accent);transition:.15s;}
+.linkbtn:hover{border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px);}
+.linkbtn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+.linkbtn.primary:hover{background:#2f3c52;}
+.linkbtn .ic-svg{width:1em;height:1em;}
+.extable{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+.extable th,.extable td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top;}
+.extable th{background:#fafafa;font-weight:700;color:var(--ink-2);font-size:12.5px;}
+.extable td:first-child{font-weight:700;color:var(--ink);white-space:nowrap;}
+.exnote{font-size:12.5px;color:var(--ink-3);margin-top:8px;line-height:1.55;}
+
+/* ---------- buttons & inputs ---------- */
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:inherit;
+  font-weight:600;font-size:14.5px;padding:11px 18px;border-radius:10px;transition:.15s;letter-spacing:-.01em;}
+.btn-primary{background:var(--ink);color:#fff;}
+.btn-primary:hover{background:#000;transform:translateY(-1px);}
+.btn-soft{background:var(--accent-soft);color:var(--accent);}
+.btn-soft:hover{background:#e0e7ff;}
+.btn-ghost{background:#f4f4f5;color:var(--ink-2);}
+.btn-ghost:hover{background:#e9e9eb;}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+
+.nav-row{display:flex;justify-content:space-between;margin-top:26px;gap:10px;}
+
+input[type=number],input[type=text],select{
+  font-family:inherit;font-size:14px;padding:9px 12px;border:1px solid var(--border-strong);
+  border-radius:9px;background:#fff;color:var(--ink);transition:.15s;width:100%;
+}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+label.field{display:block;font-size:13px;font-weight:600;color:var(--ink-2);margin-bottom:6px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media(max-width:560px){.grid2,.grid3{grid-template-columns:1fr;}}
+
+/* ===== 반응형: 태블릿·노트북에서 글씨·여백 최적화 ===== */
+/* 큰 노트북·데스크톱: 폭을 넓혀 좌우 여백 줄이고 본문을 키움 */
+@media(min-width:1100px){
+  .wrap, .top-inner{max-width:1080px;}
+  body{font-size:16.5px;}
+  .stage h2{font-size:25px;}
+  .stage .lead{font-size:15.5px;}
+  .card{padding:30px 34px;}
+}
+/* 태블릿(가로) ~ 작은 노트북 */
+@media(min-width:701px) and (max-width:1099px){
+  .wrap{padding-left:20px;padding-right:20px;}
+  body{font-size:16px;}
+  .card{padding:26px 28px;}
+}
+/* 태블릿(세로) 이하: 여백을 줄여 화면을 꽉 쓰고 글씨는 충분히 크게 */
+@media(max-width:700px){
+  .wrap{padding:0 14px 110px;}
+  .top-inner{padding:12px 14px;}
+  .card{padding:20px 18px;border-radius:14px;}
+  body{font-size:15.5px;}
+  .hero h1{font-size:26px;}
+  .stage h2{font-size:21px;}
+  .stage .lead{font-size:15px;}
+  .btn{font-size:14.5px;padding:11px 16px;}
+  textarea, .field-input, input, select{font-size:16px;}  /* iOS 자동 확대 방지(16px+) */
+  .stepper{gap:6px;}
+  .chartbox{padding:12px 8px;}
+}
+
+textarea{font-family:inherit;font-size:14.5px;line-height:1.6;padding:12px 14px;border:1px solid var(--border-strong);
+  border-radius:10px;background:#fff;color:var(--ink);width:100%;resize:vertical;min-height:84px;transition:.15s;}
+textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+
+/* 학생이 직접 계산해 입력하는 칸 · 탐구기록 칸 — 빨간 테두리로 강조 */
+input.calc-input{border:2px solid #ef4444;background:#fff8f8;}
+input.calc-input:focus{border-color:#dc2626;box-shadow:0 0 0 3px rgba(239,68,68,.16);}
+.record textarea{border:2px solid #ef4444;background:#fff8f8;}
+.record textarea:focus{border-color:#dc2626;box-shadow:0 0 0 3px rgba(239,68,68,.16);}
+/* 학생이 꼭 눌러야 하는 '무작위 표본 8개 뽑기' 버튼 — 빨간 테두리로 강조 */
+#sampleBtn{border:2px solid #ef4444;}
+#sampleBtn:hover{border-color:#dc2626;background:#fff1f1;}
+
+/* record block */
+.record{margin-top:18px;padding:16px;border:1px solid var(--accent-soft);background:#fcfcff;border-radius:12px;}
+.record .rl{font-size:12.5px;font-weight:700;color:var(--accent);margin-bottom:9px;display:flex;align-items:center;gap:7px;}
+
+/* feedback */
+.fb{margin-top:14px;padding:13px 16px;border-radius:10px;font-size:14px;font-weight:500;display:none;align-items:flex-start;gap:9px;}
+.fb.show{display:flex;}
+.fb.ok{background:var(--ok-soft);color:#166534;border:1px solid #bbf7d0;}
+.fb.warn{background:var(--warn-soft);color:#92400e;border:1px solid #fde68a;}
+.fb.bad{background:var(--bad-soft);color:#991b1b;border:1px solid #fecaca;}
+.fb.info{background:var(--accent-2-soft);color:var(--ink-2);border:1px solid var(--border-strong);}
+
+/* tables */
+table.data{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+table.data th{background:#fafafa;font-weight:700;color:var(--ink-2);text-align:right;padding:8px 11px;border-bottom:1px solid var(--border-strong);font-size:12px;}
+table.data th:first-child,table.data td:first-child{text-align:left;}
+table.data td{padding:7px 11px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;}
+table.data tr.highlight td{background:var(--accent-soft);font-weight:700;color:var(--accent);}
+.scroll{max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:10px;}
+
+/* stat chips */
+.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-top:14px;}
+.statchip{background:#fcfcfd;border:1px solid var(--border);border-radius:11px;padding:13px 15px;}
+.statchip .k{font-size:11.5px;color:var(--ink-3);font-weight:600;}
+.statchip .v{font-size:19px;font-weight:800;letter-spacing:-.02em;margin-top:3px;font-variant-numeric:tabular-nums;}
+
+/* chart */
+.chartbox{margin-top:14px;border:1px solid var(--border);border-radius:12px;padding:14px 10px 6px;background:#fff;}
+.chartbox .ctitle{font-size:12.5px;font-weight:700;color:var(--ink-2);padding:0 8px 6px;}
+svg.chart{width:100%;height:auto;display:block;}
+.legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--ink-2);padding:8px 0 2px;flex-wrap:wrap;}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle;}
+.legend i.bar{height:11px;width:11px;border-radius:3px;}
+
+.callout{margin-top:14px;padding:14px 16px;border-radius:10px;font-size:14px;}
+.callout.dim{background:#fafafa;border:1px solid var(--border);color:var(--ink-2);}
+
+.ztable-wrap{max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:10px;margin-top:8px;}
+table.zt{border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums;width:100%;}
+table.zt th,table.zt td{border:1px solid var(--border);padding:5px 7px;text-align:center;}
+table.zt th{background:#fafafa;font-weight:700;position:sticky;top:0;}
+table.zt td.zhead{background:#fafafa;font-weight:700;}
+
+.disclaimer{font-size:12px;color:var(--warn);background:var(--warn-soft);border:1px solid #fde68a;padding:10px 14px;border-radius:9px;margin-top:12px;}
+.divider{height:1px;background:var(--border);margin:24px 0;}
+.stage h3{font-size:16px;font-weight:800;letter-spacing:-.02em;margin:26px 0 6px;display:flex;align-items:center;gap:8px;}
+.seg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0 4px;}
+.seg{border:1px solid var(--border-strong);background:#fff;color:var(--ink-2);font-family:inherit;font-size:13px;font-weight:600;padding:8px 14px;border-radius:9px;cursor:pointer;transition:.15s;}
+.seg:hover{border-color:var(--accent);}
+.seg.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.seg-label{font-size:12px;font-weight:700;color:var(--ink-3);}
+.pcard{border:1px solid var(--border);border-radius:11px;padding:14px 16px;margin-top:10px;background:#fff;}
+.pcard .pq{font-size:14px;font-weight:600;margin-bottom:10px;}
+.pcard .pbtns{display:flex;gap:8px;}
+.pcard .pbtns button{flex:1;border:1px solid var(--border-strong);background:#fff;font-family:inherit;font-size:13px;font-weight:600;padding:9px;border-radius:8px;cursor:pointer;color:var(--ink-2);transition:.15s;}
+.pcard .pbtns button:hover{border-color:var(--accent);background:var(--accent-soft);}
+.pcard .preveal{margin-top:10px;font-size:13px;padding:10px 12px;border-radius:8px;display:none;line-height:1.55;}
+.pcard.answered .pbtns{display:none;}
+.pcard .preveal.ok{background:var(--ok-soft);color:#166534;border:1px solid #bbf7d0;display:block;}
+.pcard .preveal.bad{background:var(--bad-soft);color:#991b1b;border:1px solid #fecaca;display:block;}
+table.contrast{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:8px;}
+table.contrast th,table.contrast td{border:1px solid var(--border);padding:9px 11px;text-align:left;vertical-align:top;}
+table.contrast th{background:#fafafa;font-weight:700;color:var(--ink-2);}
+table.contrast td:first-child{font-weight:700;color:var(--accent);white-space:nowrap;}
+.muted{color:var(--ink-3);font-size:12.5px;}
+.kbadge{font-family:var(--mono);font-size:12px;background:#f4f4f5;padding:2px 7px;border-radius:6px;color:var(--ink-2);}
+.advbadge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;color:#9a6b00;background:#fff7e6;border:1px solid #fde68a;padding:3px 9px;border-radius:999px;vertical-align:middle;}
+.advnote{font-size:12.5px;color:#9a6b00;background:#fffdf7;border:1px dashed #fde68a;border-radius:8px;padding:8px 11px;margin-top:10px;line-height:1.6;}
+.ne-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:6px;}
+@media(max-width:640px){.ne-grid{grid-template-columns:1fr;}}
+.ne-card{border:1px solid var(--border);border-radius:12px;padding:12px 12px 10px;background:#fff;}
+.ne-card h4{margin:0 0 2px;font-size:14px;color:var(--ink);}
+.ne-card .ne-why{font-size:12.5px;color:var(--ink-2);line-height:1.55;margin-top:6px;}
+.ne-card .ne-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--accent-2);background:var(--accent-2-soft);border:1px solid var(--accent-2);border-radius:999px;padding:1px 8px;margin-bottom:4px;}
+.binrow{display:flex;align-items:center;gap:12px;margin:4px 0 10px;flex-wrap:wrap;}
+.binrow input[type=range]{flex:1;min-width:140px;max-width:280px;}
+.warmup{max-width:920px;margin:0 auto 22px;border:1px solid var(--border);border-radius:16px;background:#fff;overflow:hidden;}
+.warmup>summary{list-style:none;cursor:pointer;padding:14px 20px;font-weight:700;color:var(--ink);background:var(--accent-soft);display:flex;align-items:center;gap:9px;font-size:15px;}
+.warmup>summary::-webkit-details-marker{display:none;}
+.warmup>summary:hover{background:#eef0ff;}
+.warmup .warmup-body{padding:20px;}
+
+@media print{
+  header.top,.stepper,.nav-row,.btn,details.hint summary{display:none!important;}
+  .stage{display:block!important;page-break-inside:avoid;}
+  body{background:#fff;}
+  .card{box-shadow:none;border:1px solid #ddd;}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="logo-dot"></div>
+    <div>
+      <div class="top-title">정규분포 탐구 워크벤치</div>
+      <div class="top-sub">공공데이터를 활용한 정보·디지털 문해력 · 확률과 통계</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>관심 분야 데이터를 <span class="hl">정규분포의 눈</span>으로<br>다시 읽어봅니다</h1>
+    <p>이 도구는 답을 대신 내주지 않습니다. <b>판단과 계산은 여러분이 하고</b>, 도구는 그 결과를 그림과 숫자로 확인해 줍니다. 7단계를 따라가며 스스로 의미 있는 결론을 만들어 보세요.</p>
+    <div class="bigq"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 0 1 5.6 1c0 2-3 2.4-3 4"/><path d="M12 17h.01"/></svg> 출발 질문 — 키, 시험 점수, 측정 오차처럼 전혀 다른 현상이 왜 모두 비슷한 <b>종 모양</b>을 띨까? 그리고 우리는 그걸로 무엇을 할 수 있을까?</div>
+  </div>
+
+  <!-- STEPPER -->
+  <div class="stepper" id="stepper"></div>
+
+  <!-- ===================== STAGE 0 · 시작하기 전에 (도입) ===================== -->
+  <section class="stage" data-stage="0">
+    <div class="card">
+      <div class="record" style="margin-top:0;margin-bottom:20px;border-color:var(--border-strong);background:#fcfcfd;">
+        <div class="rl" style="color:var(--ink-2);"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 학생 정보 <span style="color:var(--ink-3);font-weight:500;">(보고서에 자동으로 들어갑니다 · 가장 먼저 적어 주세요)</span></div>
+        <div class="grid2">
+          <div><label class="field">이름</label><input type="text" id="stuName" placeholder="예: 홍길동" autocomplete="off"></div>
+          <div><label class="field">학번</label><input type="text" id="stuId" placeholder="예: 30301" autocomplete="off"></div>
+        </div>
+      </div>
+      <span class="stage-label">STEP 0 · 시작하기 전에</span>
+      <h2>왜 표준화가 필요할까? — 생각 열기</h2>
+      <div class="bigq" style="margin:8px 0 16px;"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.2 9.2a3 3 0 0 1 5.6 1c0 2-3 2.4-3 4"/><path d="M12 17h.01"/></svg> 민준은 <b>국어 83점</b>, 서연은 <b>수학 67점</b>을 받았습니다. 점수는 16점이나 차이 나는데 — 둘 중 <b>누가 자기 과목에서 더 잘한 걸까요?</b></div>
+
+      <p class="lead">국어는 쉬워서 반 평균이 75점(σ 8), 수학은 어려워서 반 평균이 55점(σ 12)이었습니다. 평균도 흩어진 정도도 다른 두 과목 — <b>원점수(83 vs 67)로는 누가 더 잘했는지 비교할 수 없습니다.</b> 슬라이더로 두 점수를 바꿔 보며, 어떻게 해야 공정하게 비교할 수 있을지 찾아보세요.</p>
+
+      <div class="chartbox" style="margin-top:8px;">
+        <div class="seg-row" style="gap:24px;flex-wrap:wrap;align-items:flex-end;">
+          <div><label class="field" style="margin:0;color:var(--accent);">민준 · <b>국어</b> 점수 = <b id="wAv">83</b>
+            <span style="color:var(--ink-3);font-weight:400;">(평균 75, σ 8)</span><br>
+            <input type="range" id="wA" min="40" max="100" step="1" value="83" oninput="drawWarm()" style="width:200px;"></label></div>
+          <div><label class="field" style="margin:0;color:#0d9488;">서연 · <b>수학</b> 점수 = <b id="wBv">67</b>
+            <span style="color:var(--ink-3);font-weight:400;">(평균 55, σ 12)</span><br>
+            <input type="range" id="wB" min="20" max="100" step="1" value="67" oninput="drawWarm()" style="width:200px;"></label></div>
+        </div>
+        <div id="warmchart" style="margin-top:10px;"></div>
+        <div id="warmReadout" class="callout dim" style="margin-top:6px;"></div>
+      </div>
+
+      <div class="callout" style="background:var(--accent-soft);border:1px solid var(--border-strong);color:var(--ink);margin-top:16px;">
+        <b><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> 그래서 표준화가 필요해요</b>
+        <div style="margin-top:8px;font-size:13.5px;line-height:1.65;">
+          처음 예시(국어 83, 수학 67)에서는 <b>원점수가 16점이나 다른데도 두 사람 모두 +1σ</b> — 자기 과목에서 똑같은 위치였습니다! 평균도 표준편차도 다른 두 분포를 <span class="kbadge">Z = (점수 − 평균) ÷ 표준편차</span> 로 바꾸면, <b>"평균에서 몇 표준편차(σ) 떨어졌는가"</b>라는 같은 잣대가 됩니다.<br>
+          이렇게 어떤 점수든 Z로 옮기면 평균 0·표준편차 1인 <b>하나의 공통 분포 — 표준정규분포 N(0, 1)</b> 위에 모여 서로 <b>직접 비교</b>할 수 있어요(위 오른쪽 그래프). 이 도구는 이 아이디어를 <b>여러분이 고른 실제 데이터</b>로 끝까지 따라가 봅니다.
+        </div>
+      </div>
+    </div>
+    <div class="nav-row"><span></span><button class="btn btn-primary" onclick="go(1)">탐구 시작하기 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 1 ===================== -->
+  <section class="stage" data-stage="1">
+    <div class="card">
+      <span class="stage-label">STEP 1 · 데이터 준비</span>
+      <h2>분포를 이루는 데이터 모으기</h2>
+      <p class="lead">정규분포는 <b>여러 개체의 값이 모여 만드는 분포</b>를 다룹니다. "연도별 한 나라의 값"(시계열)이 아니라, <b>한 시점에서 여러 개체의 값</b>이 필요해요.</p>
+
+      <div class="goal">
+        <span class="ic"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/></svg></span>
+        <div><b>이 단계의 목표</b><p>같은 대상들에 대해 <b>단위·척도가 다른 두 지표</b>를 한 열씩 모은다. (예: OECD 국가별 ①기대수명 ②삶의 만족도 — KOSIS 국제통계·OECD에서 찾을 수 있는 지표)</p></div>
+      </div>
+
+      <div class="guide-open">
+        <div class="gtitle"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14"/></svg> 어디서부터 시작할까?</div>
+        <div class="gbody">
+          <ul>
+            <li>아래 <b>공공데이터 포털</b>에서 <b>관심 분야</b> 데이터를 찾습니다.</li>
+            <li>개체(나라·지역·학교·기업·선수 등)가 <b>최소 20개 이상</b> 있어야 분포를 볼 수 있어요.</li>
+            <li>두 번째 지표는 첫 번째와 <b>단위·규모가 다른</b> 것으로 고르세요. 5단계 비교 활동에서 쓰입니다.</li>
+            <li>아래 <b>엑셀 양식</b>을 받아 A열=개체명, B열=지표1, C열=지표2 형태로 채웁니다.</li>
+          </ul>
+
+          <h5><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg> 데이터 바로 찾으러 가기</h5>
+          <div class="linkrow">
+            <a class="linkbtn primary" href="https://kosis.kr" target="_blank" rel="noopener"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg> KOSIS 국가통계포털</a>
+            <a class="linkbtn" href="https://kosis.kr/statisticsList/statisticsListIndex.do?menuId=M_02_01_01" target="_blank" rel="noopener">KOSIS 국제·OECD 통계</a>
+            <a class="linkbtn" href="https://data.kma.go.kr" target="_blank" rel="noopener">기상자료개방포털</a>
+            <a class="linkbtn" href="https://tradedata.go.kr" target="_blank" rel="noopener">관세청 무역통계</a>
+            <a class="linkbtn" href="https://kess.kedi.re.kr" target="_blank" rel="noopener">교육통계서비스</a>
+            <a class="linkbtn" href="https://data.oecd.org" target="_blank" rel="noopener">OECD Data</a>
+          </div>
+          <div class="exnote">※ 새 탭으로 열립니다. KOSIS에서 <b>「국내통계 → 주제별」</b> 또는 <b>「국제·OECD」</b> 메뉴로 들어가, 표를 <b>엑셀(.xlsx)로 내려받아</b> 개체명·지표1·지표2 세 열만 정리하면 됩니다.</div>
+
+          <h5><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18.7 8a5 5 0 0 0-9.4 0"/><path d="M3 13c4 0 5-5 9-5s5 5 9 5"/></svg> 정규분포에 가까운 데이터, 이런 걸 골라요</h5>
+          <table class="extable">
+            <thead><tr><th>주제(개체)</th><th>지표 1</th><th>지표 2 (단위가 다른 것)</th></tr></thead>
+            <tbody>
+              <tr><td>OECD 국가</td><td>기대수명(년)</td><td>1인당 GDP(달러) 또는 삶의 만족도(점)</td></tr>
+              <tr><td>전국 시군구</td><td>연평균 기온(℃)</td><td>연 강수량(mm)</td></tr>
+              <tr><td>프로스포츠 선수<br>(KBO·EPL 등)</td><td>키(cm)</td><td>체중(kg) 또는 시즌 기록</td></tr>
+              <tr><td>시·도별 학교</td><td>학생 평균 키(cm)</td><td>평균 몸무게(kg)</td></tr>
+              <tr><td>세계 도시·국가</td><td>평균 수면시간(시간)</td><td>평균 노동시간(시간)</td></tr>
+            </tbody>
+          </table>
+          <div class="exnote"><b>왜 종 모양일까?</b> — 사람의 키·몸무게, 신생아 출생 체중, 적당한 난이도의 시험 점수(응시자 多), 측정 오차, 공산품의 치수(규격 ± 오차), 혈압·반응속도 같은 생체 측정값은 <b>여러 작은 요인이 더해져</b> 만들어지기 때문에 정규분포에 가까워집니다. 반대로 <b>소득·재산·가격·인구</b>처럼 한쪽으로 꼬리가 긴 데이터는 정규분포와 거리가 멀어요(2단계에서 더 살펴봅니다).</div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-soft" onclick="downloadTemplate()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg> 엑셀 양식 받기</button>
+        <label class="btn btn-primary" style="cursor:pointer;"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg> 내 데이터 업로드<input type="file" accept=".xlsx,.xls,.csv" onchange="handleUpload(event)" style="display:none;"></label>
+        <button class="btn btn-ghost" onclick="loadSample()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polygon points="7 4 19 12 7 20 7 4"/></svg> 연습용 데이터로 체험</button>
+      </div>
+
+      <div id="uploadFeedback" class="fb"></div>
+
+      <div id="dataPreview" style="display:none;margin-top:18px;">
+        <div class="grid2" style="margin-bottom:14px;">
+          <div><label class="field">지표 1 (척도 A)</label><div id="ind1name" class="kbadge"></div></div>
+          <div><label class="field">지표 2 (척도 B)</label><div id="ind2name" class="kbadge"></div></div>
+        </div>
+        <label class="field"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 자세히 들여다볼 <b>관심 대상</b> 선택 (예: 대한민국)</label>
+        <select id="focusSelect" onchange="setFocus()"></select>
+        <div class="scroll" style="margin-top:14px;"><table class="data" id="previewTable"></table></div>
+        <div class="muted" style="margin-top:8px;">총 <b id="nCount">0</b>개 개체 · 관심 대상은 표에서 강조됩니다.</div>
+      </div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 1</div>
+        <label class="field">나는 어떤 분야의, 어떤 두 지표를 골랐고 왜 그것이 궁금한가?</label>
+        <textarea id="rec1" placeholder="예) OECD 국가별 기대수명과 삶의 만족도를 골랐다. 오래 사는 것과 삶의 만족이 함께 가는지, 우리나라는 어디쯤인지 궁금했기 때문이다. (KOSIS 국제통계·OECD에서 수집)"></textarea>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(0)">← 시작 화면</button><button class="btn btn-primary" onclick="go(2)">다음 단계 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 2 ===================== -->
+  <section class="stage" data-stage="2">
+    <div class="card">
+      <span class="stage-label">STEP 2 · 분포 관찰</span>
+      <h2>이 데이터는 정규분포를 따를까?</h2>
+
+      <details class="hint">
+        <summary>판단 기준이 헷갈린다면?</summary>
+        <div class="body">
+          <ul>
+            <li>좌우 대칭으로 가운데가 가장 높고 양쪽으로 완만히 낮아지면 → 정규분포에 가깝다.</li>
+            <li>한쪽으로 <b>꼬리가 길면(치우침)</b> → 정규분포와 거리가 있다. (소득·가격 데이터에서 흔함)</li>
+            <li>봉우리가 <b>두 개</b>면 → 서로 다른 집단이 섞여 있을 수 있다.</li>
+            <li>좌우가 대칭일수록, 그리고 봉우리가 하나일수록 정규분포에 가깝다고 볼 수 있어요. <b>여러분의 눈으로</b> 곡선과 막대를 비교해 판단하세요.</li>
+          </ul>
+        </div>
+      </details>
+
+      <div id="histArea" style="display:none;">
+        <div class="chartbox">
+          <div class="ctitle" id="h1title"></div>
+          <div class="binrow"><span class="seg-label">계급(구간) 수: <b id="binVal1" style="color:var(--accent);">—</b></span>
+            <input type="range" id="binSlider1" min="3" max="20" step="1" value="8" oninput="setBins('1')"></div>
+          <div id="hist1"></div>
+          <div class="legend"><span><i class="bar" style="background:var(--accent-2-soft);border:1px solid var(--accent-2);"></i>실제 데이터(히스토그램)</span><span><i style="background:var(--accent);"></i>같은 평균·표준편차의 정규곡선</span></div>
+        </div>
+        <div class="grid2" id="judge1" style="margin-top:6px;"></div>
+
+        <div class="divider"></div>
+
+        <div class="chartbox">
+          <div class="ctitle" id="h2title"></div>
+          <div class="binrow"><span class="seg-label">계급(구간) 수: <b id="binVal2" style="color:var(--accent);">—</b></span>
+            <input type="range" id="binSlider2" min="3" max="20" step="1" value="8" oninput="setBins('2')"></div>
+          <div id="hist2"></div>
+          <div class="legend"><span><i class="bar" style="background:var(--accent-2-soft);border:1px solid var(--accent-2);"></i>실제 데이터(히스토그램)</span><span><i style="background:var(--accent);"></i>같은 평균·표준편차의 정규곡선</span></div>
+        </div>
+        <div class="grid2" id="judge2" style="margin-top:6px;"></div>
+        <div class="advnote" style="color:var(--ink-2);background:var(--accent-2-soft);border-color:var(--border-strong);"><b>계급 수를 직접 바꿔 보세요.</b> 같은 데이터라도 구간을 잘게 나누면(많은 계급) 울퉁불퉁해 보이고, 크게 나누면(적은 계급) 매끈해 보입니다. 막대 모양은 이렇게 계급 수에 따라 달라지므로, 정규분포 판단은 막대 하나가 아니라 <b>전체 윤곽</b>으로 하세요.</div>
+      </div>
+      <div id="noDataMsg2" class="callout dim">먼저 1단계에서 데이터를 불러와 주세요.</div>
+
+      <div class="divider"></div>
+      <h3><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M3 15c4 0 5-9 9-9s5 9 9 9"/></svg> 정규곡선의 성질 — 평균(m)과 표준편차(σ)를 바꿔보기</h3>
+      <p class="lead">정규분포는 <b>평균 m</b>과 <b>표준편차 σ</b> 두 값으로 모양이 완전히 정해집니다. 슬라이더를 움직여 곡선이 어떻게 달라지는지 직접 확인해 보세요.</p>
+      <div class="chartbox">
+        <div class="seg-row" style="gap:18px;flex-wrap:wrap;">
+          <label class="field" style="margin:0;">평균 m = <b id="muVal" style="color:var(--accent);">0</b>
+            <input type="range" id="muSlider" min="-4" max="4" step="0.5" value="0" oninput="drawProperty()" style="vertical-align:middle;width:160px;"></label>
+          <label class="field" style="margin:0;">표준편차 σ = <b id="sgVal" style="color:var(--accent);">1</b>
+            <input type="range" id="sgSlider" min="0.5" max="3" step="0.1" value="1" oninput="drawProperty()" style="vertical-align:middle;width:160px;"></label>
+        </div>
+        <div id="propchart" style="margin-top:8px;"></div>
+        <div class="legend"><span><i style="background:#9ca3af;"></i>기준 곡선 N(0, 1)</span><span><i style="background:var(--accent);"></i>내가 만든 곡선 N(m, σ²)</span></div>
+      </div>
+      <details class="hint">
+        <summary>무엇을 발견했나요?</summary>
+        <div class="body"><ul>
+          <li><b>m</b>을 키우면 곡선이 <b>오른쪽으로 평행이동</b>합니다(모양은 그대로). m은 곡선의 <b>중심·대칭축</b>이에요.</li>
+          <li><b>σ</b>를 키우면 곡선이 <b>낮고 넓게</b> 퍼지고, 줄이면 <b>높고 좁게</b> 모입니다. σ는 <b>흩어진 정도</b>예요.</li>
+          <li>σ가 달라져도 곡선 아래 전체 넓이는 항상 <b>1</b>로 같습니다(넓게 퍼지면 그만큼 낮아짐).</li>
+          <li>어떤 m·σ에서도 곡선은 <b>m을 기준으로 좌우 대칭</b>이고 종 모양입니다.</li>
+        </ul></div>
+      </details>
+
+      <div class="divider"></div>
+      <h3><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> 이런 모양은 정규분포로 보기 어려워요</h3>
+      <div id="nonExampleGallery" class="ne-grid"></div>
+
+      <div class="callout" style="background:var(--accent-2-soft);border:1px solid var(--border-strong);color:var(--ink-2);margin-top:16px;">
+        <b><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> 막대 하나하나에 너무 휘둘리지 마세요</b>
+        <div style="margin-top:6px;font-size:13.5px;line-height:1.65;">개체 수가 적으면(수십 개) 진짜 정규분포라도 막대 높이는 우연히 들쭉날쭉합니다 — <b>가운데 막대가 옆보다 잠깐 낮아 보여도</b> 그것만으로 "정규분포가 아니다"라고 단정할 수 없어요. 또 막대 모양은 <b>구간을 몇 개로 나누느냐</b>에 따라서도 달라집니다. 판단은 막대 하나가 아니라 <b>전체 윤곽</b>(가운데가 대체로 높고, 좌우 대칭에 가깝고, 한쪽 꼬리만 길지 않은가)으로 하세요.</div>
+      </div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 2</div>
+        <label class="field">두 지표는 각각 정규분포에 어울리는가? 그렇게 판단한 근거(곡선 모양·대칭성·꼬리)는?</label>
+        <textarea id="rec2" placeholder="예) 두 지표 모두 히스토그램이 종 모양 정규곡선과 대체로 닮아 좌우 대칭에 가까웠다. 한쪽 끝에 몰리거나 꼬리가 길지 않아 정규모델로 다뤄도 큰 무리는 없어 보였다."></textarea>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(1)">← 이전</button><button class="btn btn-primary" onclick="go(3)">다음 단계 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 4 (직접 계산) ===================== -->
+  <section class="stage" data-stage="3">
+    <div class="card">
+      <span class="stage-label">STEP 3 · 직접 계산</span>
+      <h2>손으로 평균·분산·표준편차 구하기</h2>
+
+      <div style="margin:6px 0 4px;font-size:13.5px;font-weight:600;color:var(--ink-2);">분석할 지표 선택</div>
+      <select id="calcIndicator" onchange="resetSample()" style="max-width:340px;"></select>
+
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-soft" id="sampleBtn" onclick="drawSample()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg> 무작위 표본 8개 뽑기</button>
+      </div>
+
+      <div id="sampleBox" style="display:none;margin-top:16px;">
+        <div class="callout dim" style="margin-top:0;">
+          <b>뽑힌 표본:</b> <span id="sampleVals" style="font-variant-numeric:tabular-nums;"></span>
+        </div>
+        <p class="muted" style="margin:12px 0 4px;">아래 공식으로 직접 계산해 입력하세요. <span class="kbadge">분산 = 편차² 의 평균(÷n)</span></p>
+        <div id="formulaReminder" style="margin:8px 0 16px;font-size:14px;color:var(--ink-2);"></div>
+
+        <div class="grid3">
+          <div><label class="field">평균 m</label><input type="number" step="any" id="inMean" class="calc-input" placeholder="직접 입력"></div>
+          <div><label class="field">분산 (÷n)</label><input type="number" step="any" id="inVar" class="calc-input" placeholder="직접 입력"></div>
+          <div><label class="field">표준편차</label><input type="number" step="any" id="inSd" class="calc-input" placeholder="직접 입력"></div>
+        </div>
+        <div class="callout dim" style="margin-top:14px;">직접 계산한 세 값을 입력해 두세요. 입력한 값은 <b>보고서에 그대로 기록</b>됩니다. <span class="muted" style="display:block;margin-top:4px;">※ 입력칸의 값은 <b>현재 뽑힌 표본</b> 기준입니다. 표본을 다시 뽑으면 새 표본으로 다시 계산해 입력하세요.</span></div>
+
+        <div class="btn-row" style="margin-top:14px;"><button class="btn btn-primary" onclick="revealPopStats()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> 전체 데이터 평균·표준편차 확인</button></div>
+        <div id="popReveal" class="fb"></div>
+
+        <details class="hint" style="margin-top:14px;">
+          <summary>🖩 계산기 (손계산 보조용)</summary>
+          <div class="body">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+              <input type="text" id="calcExpr" placeholder="예: (83.7+81.2+79.5)/3" style="flex:1;min-width:220px;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-variant-numeric:tabular-nums;" onkeydown="if(event.key==='Enter')runCalc()">
+              <button class="btn btn-soft" onclick="runCalc()">계산 =</button>
+            </div>
+            <div id="calcResult" style="margin-top:8px;font-size:15px;font-weight:700;color:var(--accent);min-height:20px;"></div>
+            <p class="muted" style="margin-top:6px;font-size:12px;">+ − × (* 또는 ×) ÷ (/ 또는 ÷), 괄호, 소수점, 제곱근 sqrt( ) 사용 가능. 예: <code>sqrt(2.75)</code></p>
+          </div>
+        </details>
+      </div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 3</div>
+        <label class="field">표본(8개)으로 구한 평균·표준편차는 전체 데이터의 값과 얼마나 차이가 났는가? 왜 그런 차이가 생긴다고 생각하는가? (표본 다시 뽑기를 몇 번 해보면 값이 어떻게 달라지는지도 함께 살펴보세요.)</label>
+        <textarea id="rec3" placeholder="예) 표본 8개의 평균은 ○○, 전체 평균은 △△로 약간 차이가 났다. 표본은 전체의 일부만 뽑은 것이라 뽑을 때마다 값이 흔들리기 때문이다. 다시 뽑아 보니 값이 조금씩 달라졌고, 전체를 모두 쓰면 차이가 사라질 것이다."></textarea>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(2)">← 이전</button><button class="btn btn-primary" onclick="go(4)">다음 단계 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 4 ===================== -->
+  <section class="stage" data-stage="4">
+    <div class="card">
+      <span class="stage-label">STEP 4 · 표준화와 확률</span>
+      <h2>확률은 곡선 아래의 넓이다</h2>
+      <p class="lead">정규분포를 모델로 받아들였다면, 이제 <b>실제 확률 질문</b>에 답할 수 있습니다. 직접 표준화한 뒤 표준정규분포표를 읽어 보세요. 도구는 그 확률을 <b>곡선 아래 넓이</b>로 색칠해 보여줍니다.</p>
+
+      <div class="goal">
+        <span class="ic"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/></svg></span>
+        <div><b>이 단계의 목표</b><p>관심 대상 값에 대해 <span class="kbadge">Z = (X − μ) / σ</span> 를 직접 구하고, 표준정규분포표로 확률을 읽어 "확률 = 넓이"를 눈으로 확인한다.</p></div>
+      </div>
+
+      <div id="probArea" style="display:none;">
+        <div class="callout" style="background:#fcfcfd;border:1px solid var(--border);margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+          <span style="font-weight:700;color:var(--ink-2);"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 기준값으로 삼을 대상(개체)</span>
+          <select id="probFocus" onchange="setProbFocus()" style="min-width:160px;"></select>
+          <span class="muted" style="font-size:12.5px;">대상을 바꾸면 아래 <b>기준값 X</b>가 그 대상의 값으로 자동 입력됩니다. (X는 직접 수정도 가능)</span>
+        </div>
+        <div class="grid2" style="margin-top:12px;">
+          <div><label class="field">분석할 지표</label><select id="probIndicator" onchange="onProbIndicatorChange()"></select></div>
+          <div><label class="field" id="probXlabel">기준값 X</label><input type="number" step="any" id="probX"></div>
+        </div>
+        <div class="callout dim" id="probContext" style="margin-top:14px;"></div>
+
+        <div style="margin-top:18px;font-size:13.5px;font-weight:700;color:var(--ink-2);">① 직접 표준화하기</div>
+        <p class="muted" style="margin:4px 0 10px;">위 μ, σ로 Z를 손으로 계산해 입력하세요.</p>
+        <div class="grid2">
+          <div><label class="field">내가 구한 Z 값</label><input type="number" step="any" id="probZ" class="calc-input"></div>
+          <div><label class="field">묻고 싶은 확률</label>
+            <select id="probDir">
+              <option value="ge">P(X ≥ 기준값) — 이상일 확률</option>
+              <option value="le">P(X ≤ 기준값) — 이하일 확률</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;font-size:13.5px;font-weight:700;color:var(--ink-2);">② 표준정규분포표로 확률 읽기</div>
+        <p class="muted" style="margin:4px 0 10px;">아래 표는 <span class="kbadge">P(0 ≤ Z ≤ z)</span> 값입니다. 표에서 읽은 확률을 입력하세요.</p>
+        <details class="hint"><summary>표준정규분포표 펼치기</summary><div class="body"><div class="ztable-wrap" id="ztableWrap"></div></div></details>
+        <div style="max-width:260px;margin-top:10px;"><label class="field">표에서 읽어 계산한 확률</label><input type="number" step="any" id="probAns" class="calc-input" placeholder="예: 0.1587"></div>
+
+        <div class="btn-row" style="margin-top:16px;"><button class="btn btn-primary" onclick="checkProb()">넓이로 확인하기</button></div>
+        <div id="probFeedback" class="fb"></div>
+
+        <div id="probChartBox" class="chartbox" style="display:none;">
+          <div class="ctitle">표준정규분포 N(0,1) — 색칠된 넓이가 곧 확률</div>
+          <div id="zchart"></div>
+        </div>
+        <div id="probEmpirical" class="callout" style="display:none;background:var(--accent-2-soft);border:1px solid var(--border-strong);color:var(--ink-2);margin-top:14px;"></div>
+      </div>
+      <div id="noDataMsg4" class="callout dim">먼저 1단계에서 데이터를 불러와 주세요.</div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 4</div>
+        <label class="field">내가 구한 확률은 <b>무엇을 뜻하는가?</b></label>
+        <textarea id="rec4" style="min-height:120px;" placeholder="예) P(X ≥ 83.7) ≈ 0.18은 '임의로 한 나라를 뽑을 때 우리나라보다 기대수명이 긴 나라일 확률이 약 18%'라는 뜻이다. 즉 우리나라는 전체에서 상위 약 18% 안에 드는 편이다. 곡선에서 그만큼의 넓이가 색칠되는 걸 보니, 확률이 '넓이'라는 게 분명해졌다."></textarea>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(3)">← 이전</button><button class="btn btn-primary" onclick="go(5)">다음 단계 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 5 ===================== -->
+  <section class="stage" data-stage="5">
+    <div class="card">
+      <span class="stage-label">STEP 5 · 두 지표 비교</span>
+      <h2>척도가 다른 두 세계를 하나의 자로 재기</h2>
+      <p class="lead">단위나 평균·난이도가 달라 <b>원점수만으로는 공정하게 비교하기 어려운</b> 두 지표 — 어떻게 비교할까요? <b>Z 점수</b>는 "평균에서 몇 표준편차 떨어져 있는가"라는 공통의 자입니다. 이것이 표준화를 배우는 가장 실용적인 이유예요.</p>
+
+      <div class="goal">
+        <span class="ic"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6"/></svg></span>
+        <div><b>이 단계의 목표</b><p>관심 대상의 Z 점수를 두 지표에서 각각 구해, <b>어느 쪽이 상대적으로 더 극단적인지</b> 판단한다.</p></div>
+      </div>
+
+      <details class="hint">
+        <summary>Z 점수로 비교한다는 게 무슨 뜻?</summary>
+        <div class="body">
+          예를 들어 어떤 학생의 국어 원점수와 수학 원점수는 만점·평균이 달라 직접 못 비교합니다. 하지만 각각을 <span class="kbadge">Z = (점수 − 평균) / 표준편차</span> 로 바꾸면 "평균 대비 몇 σ 위인가"라는 같은 잣대가 되어 비교할 수 있어요. 여기서도 똑같이 적용합니다.
+        </div>
+      </details>
+
+      <div id="compareArea" style="display:none;">
+        <div class="callout" style="background:#fcfcfd;border:1px solid var(--border);margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;">
+          <span style="font-weight:700;color:var(--ink-2);"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> 관심 대상 바꿔보기</span>
+          <select id="focusSelect5" onchange="setFocus5()" style="min-width:160px;"></select>
+          <span class="muted" style="font-size:12.5px;">대상을 바꾸면 아래 위치가 즉시 갱신됩니다. 여러 대상을 살펴본 뒤 보고서에 쓸 대상을 고르세요.</span>
+        </div>
+        <div class="callout dim" id="compareContext" style="margin-top:10px;"></div>
+
+        <p class="muted" style="margin:16px 0 10px;">관심 대상의 Z 점수를 <b>두 지표에서 각각 직접</b> 계산해 입력하세요.</p>
+        <div class="grid2">
+          <div><label class="field" id="zlab1">지표1 Z 점수</label><input type="number" step="any" id="cmpZ1" class="calc-input"></div>
+          <div><label class="field" id="zlab2">지표2 Z 점수</label><input type="number" step="any" id="cmpZ2" class="calc-input"></div>
+        </div>
+        <div class="btn-row" style="margin-top:14px;"><button class="btn btn-primary" onclick="checkCompare()">비교 시각화</button></div>
+        <div id="cmpFeedback" class="fb"></div>
+
+        <div id="cmpChartBox" class="chartbox" style="display:none;">
+          <div class="ctitle">두 지표에서의 상대적 위치 (단위: 표준편차 σ)</div>
+          <div id="cmpchart"></div>
+        </div>
+      </div>
+      <div id="noDataMsg5" class="callout dim">먼저 1단계에서 데이터를 불러와 주세요.</div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 5</div>
+        <label class="field">관심 대상은 두 지표 중 어느 쪽에서 더 극단적인가? 이 비교가 알려주는 의미는?</label>
+        <textarea id="rec5" placeholder="예) 우리나라는 기대수명에서는 +1.3σ 안팎으로 뚜렷한 상위권이지만, 삶의 만족도에서는 평균 부근(약 +0.3σ)에 머물렀다. 두 지표 모두 평균보다 위이지만 기대수명 쪽이 훨씬 더 극단적이어서, 오래 사는 정도만큼 삶의 만족이 두드러지지는 않는다고 해석할 수 있다."></textarea>
+      </div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(4)">← 이전</button><button class="btn btn-primary" onclick="go(6)">다음 단계 →</button></div>
+  </section>
+
+  <!-- ===================== STAGE 6 ===================== -->
+  <section class="stage" data-stage="6">
+    <div class="card">
+      <span class="stage-label">STEP 6 · 결론과 성찰</span>
+      <h2>결론을 내리고, 분석 방법을 돌아보기</h2>
+      <p class="lead">데이터에서 끌어낸 결론을 정리하고, <b>표준화·정규분포가 분석에 어떤 역할을 했고 그 결과를 얼마나 믿을 수 있는지</b>까지 돌아봐야 진짜 탐구입니다.</p>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 6 — 데이터 분석과 결론</div>
+        <label class="field">관심 대상의 두 Z 점수를 근거로 데이터가 말해 주는 것을 분석하세요. ① 두 지표에서 각각 전형적인가, 극단적인가? ② 두 Z 점수의 <b>차이</b>는 무엇을 뜻하는가? ③ 다른 개체들과 비교해 보이는 패턴·이상치는? ④ 이로부터 끌어낼 <b>구체적 결론·시사점</b>은?</label>
+        <textarea id="rec6" style="min-height:140px;" placeholder="예) 우리나라는 A지표에서는 +0.1σ로 평범하지만 B지표에서는 +2.3σ로 극단값이었다. 두 점수의 큰 차이는 'A 수준만으로는 설명되지 않는 높은 B'를 뜻한다. 같은 A 수준의 다른 개체들은 B가 훨씬 낮아, B는 A의 필연적 결과가 아니라 구조·정책의 문제임을 시사한다. 따라서 …"></textarea>
+      </div>
+
+      <div class="record" style="border-color:#fde68a;background:#fffdf7;">
+        <div class="rl" style="color:var(--warn);"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg> 탐구 기록 7 — 분석 방법과 한계 돌아보기 (필수)</div>
+        <label class="field">① 표준화(Z 점수) 덕분에 원래 단위로는 불가능했던 어떤 비교가 가능해졌는가? ② 관심 대상의 Z 점수를 '상위 약 몇 %'로 해석할 때, 내가 관찰한 분포 모양을 고려하면 그 해석을 얼마나 믿을 수 있는가? ③ 이 분석의 <b>한계</b>는?(개체 수, 이상치가 평균·표준편차에 준 영향, 결론의 일반화 범위)</label>
+        <textarea id="rec7" style="min-height:140px;" placeholder="예) 단위가 다른 두 지표를 Z 점수로 바꾸니 '평균에서 몇 σ'라는 같은 자로 비교할 수 있었다. 관심 대상의 +2.3σ는 분포가 종 모양에 가깝다는 관찰을 전제하면 '상위 약 1%'로 읽히는데, 정규분포 가정이 의미를 갖는 지점이 바로 이 '얼마나 드문가'의 해석이다. 다만 개체가 30개뿐이라 평균·표준편차가 일부 극단값에 민감하고, 결론을 이 집단 밖으로 일반화하긴 어렵다."></textarea>
+      </div>
+
+      <div class="record">
+        <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> 탐구 기록 8 — 탐구하며 겪은 어려움과 극복 방안</div>
+        <label class="field">탐구를 진행하면서 어떤 어려움이 있었나요? 그 어려움을 어떻게 해결(극복)했나요?</label>
+        <textarea id="recHardship" style="min-height:120px;" placeholder="예) 정규분포에 맞는 데이터를 찾기가 어려웠다. 처음 고른 데이터가 한쪽으로 치우쳐 있어서, 개체 수가 더 많은 다른 지표로 바꾸어 해결했다. 또 표준화 계산이 헷갈렸는데, 평균과 표준편차를 먼저 정확히 구한 뒤 공식에 차근차근 대입하니 풀렸다."></textarea>
+      </div>
+
+      <div class="divider"></div>
+      <p class="lead"><b>편집 가능한 보고서 파일(.docx)</b>을 받으면 내가 쓴 답변·데이터 표·정규분포 그래프가 모두 담겨 나옵니다. 워드·한글·구글 문서 등에서 열어 자유롭게 고친 뒤 제출하세요. 데이터를 먼저 불러와야 파일이 생성됩니다.</p>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="downloadReport()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> 편집 가능한 보고서 파일(.docx) 받기</button>
+        <button class="btn btn-soft" onclick="buildReport()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg> 화면에서 미리보기</button>
+        <button class="btn btn-ghost" onclick="window.print()"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="13" width="12" height="8" rx="1"/></svg> 인쇄 / PDF 저장</button>
+      </div>
+      <div id="reportOut" style="margin-top:18px;"></div>
+    </div>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="go(5)">← 이전</button><span></span></div>
+  </section>
+
+  <div class="disclaimer"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> <b>연습용 데이터 안내</b> — '연습용 데이터로 체험'의 값은 도구 사용법을 익히기 위해 임의로 만든 가상 값입니다. 실제 수행평가에서는 KOSIS·관세청·OECD 등에서 <b>직접 수집한 데이터</b>를 사용하세요.</div>
+</div>
+
+<script>
+/* ============ 상태 ============ */
+const S = {
+  rows: [],            // [{name, v1, v2}]
+  ind1:'지표1', ind2:'지표2',
+  focusIdx: 0,
+  sample: [],
+  loaded:false
+};
+const STEPS = ['시작하기 전에','데이터 준비','분포 관찰','직접 계산','표준화·확률','두 지표 비교','결론·성찰'];
+let cur = 0;
+
+/* ============ 수학 유틸 ============ */
+function mean(a){return a.reduce((s,x)=>s+x,0)/a.length;}
+function varP(a){const m=mean(a);return a.reduce((s,x)=>s+(x-m)*(x-m),0)/a.length;}
+function sdP(a){return Math.sqrt(varP(a));}
+function median(a){const b=[...a].sort((x,y)=>x-y);const n=b.length;return n%2? b[(n-1)/2] : (b[n/2-1]+b[n/2])/2;}
+function skewness(a){const m=mean(a),s=sdP(a);if(s===0)return 0;return a.reduce((t,x)=>t+Math.pow((x-m)/s,3),0)/a.length;}
+function erf(x){const s=x<0?-1:1;x=Math.abs(x);const t=1/(1+0.3275911*x);
+  const y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+  return s*y;}
+function stdNormCdf(z){return 0.5*(1+erf(z/Math.SQRT2));}
+function stdNormPdf(z){return Math.exp(-z*z/2)/Math.sqrt(2*Math.PI);}
+function fmt(x,d=2){if(!isFinite(x))return '–';return Number(x).toLocaleString('ko-KR',{maximumFractionDigits:d,minimumFractionDigits:0});}
+function col(i){return i===1? S.ind1 : S.ind2;}
+function vals(i){return S.rows.map(r=>i===1?r.v1:r.v2);}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function zscore(x,arr){const s=sdP(arr);return s===0?null:(x-mean(arr))/s;}
+
+/* ============ 스텝퍼 ============ */
+function renderStepper(){
+  const el=document.getElementById('stepper');
+  el.innerHTML=STEPS.map((t,i)=>`
+    <div class="step-pill ${i===cur?'active':''} ${i<cur?'done':''}" onclick="go(${i})">
+      <span class="num">${i<cur?'✓':i}</span><span>${t}</span>
+    </div>`).join('');
+}
+function go(i){
+  cur=i;
+  document.querySelectorAll('.stage').forEach(s=>s.classList.toggle('show', +s.dataset.stage===i));
+  renderStepper();
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(i===0) drawWarm();
+  if(i===2){ renderHistStage(); drawProperty(); drawNonExamples(); }
+  if(i===3) initCalcStage();
+  if(i===4) initProbStage();
+  if(i===5) initCompareStage();
+  renderMath();
+}
+
+/* ============ 1단계: 업로드 ============ */
+function downloadTemplate(){
+  const ws=XLSX.utils.aoa_to_sheet([
+    ['개체명','지표1(이름을 바꾸세요)','지표2(이름을 바꾸세요)'],
+    ['예: 대한민국',578.6,34.8],
+    ['예: 일본',1038.2,33.8],
+    ['예: 독일,...','...','...']
+  ]);
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'데이터');
+  XLSX.writeFile(wb,'정규분포_탐구_양식.xlsx');
+}
+function handleUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const sh=wb.Sheets[wb.SheetNames[0]];
+      const aoa=XLSX.utils.sheet_to_json(sh,{header:1,blankrows:false});
+      ingest(aoa);
+    }catch(err){fb('uploadFeedback','bad','파일을 읽지 못했습니다. 양식(개체명 / 지표1 / 지표2)을 확인해 주세요.');}
+  };
+  r.readAsArrayBuffer(f);
+}
+function ingest(aoa){
+  if(!aoa||aoa.length<3){fb('uploadFeedback','bad','데이터가 너무 적습니다. 개체가 최소 15개 이상 필요해요.');return;}
+  const head=aoa[0];
+  S.ind1=String(head[1]??'지표1').trim()||'지표1';
+  S.ind2=String(head[2]??'지표2').trim()||'지표2';
+  const rows=[];
+  for(let i=1;i<aoa.length;i++){
+    const r=aoa[i];if(!r||r[0]==null||r[0]==='')continue;
+    const v1=parseFloat(r[1]),v2=parseFloat(r[2]);
+    if(!isFinite(v1)||!isFinite(v2))continue;
+    rows.push({name:String(r[0]).trim(),v1,v2});
+  }
+  if(rows.length===0){fb('uploadFeedback','bad','숫자로 인식되는 유효한 데이터가 없습니다. 양식의 2·3열에 숫자 값이 들어갔는지 확인해 주세요.');return;}
+  if(rows.length<15){fb('uploadFeedback','warn',`유효한 개체가 ${rows.length}개입니다. 분포를 보려면 20개 이상을 권장해요. 일단 진행은 가능합니다.`);}
+  else {fb('uploadFeedback','ok',`좋아요! ${rows.length}개 개체, 두 지표(${esc(S.ind1)} / ${esc(S.ind2)})를 불러왔습니다.`);}
+  S.rows=rows;S.focusIdx=0;S.loaded=true;S.calc=null;S.sample=[];
+  renderPreview();
+}
+function loadSample(){
+  // 연습용 가상 데이터: 세계 주요국 ①기대수명 ②삶의 만족도 (KOSIS 국제통계·OECD·WHO 등에서 찾을 수 있는 지표, 값은 가상)
+  const names=['대한민국','일본','미국','독일','프랑스','영국','이탈리아','스페인','캐나다','호주','네덜란드','벨기에','스웨덴','노르웨이','덴마크','핀란드','오스트리아','스위스','폴란드','체코','헝가리','포르투갈','그리스','아일랜드','뉴질랜드','멕시코','칠레','터키','슬로바키아','슬로베니아','에스토니아','아이슬란드','룩셈부르크','라트비아','리투아니아','이스라엘','코스타리카','콜롬비아','중국','인도','인도네시아','브라질','아르헨티나','러시아','남아프리카공화국','이집트','태국','베트남','말레이시아','필리핀','싱가포르','사우디아라비아','아랍에미리트','우크라이나','루마니아','불가리아','크로아티아','페루','나이지리아','케냐'];
+  function rndn(mu,sg){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return mu+sg*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+  const rows=names.map(nm=>({
+    name:nm,
+    v1:Math.round(Math.max(60,Math.min(86, rndn(76,5.5)))*10)/10,    // 기대수명(년)
+    v2:Math.round(Math.max(3.0,Math.min(8.0, rndn(5.8,1.05)))*10)/10  // 삶의 만족도(10점)
+  }));
+  rows[0].v1=83.7; rows[0].v2=6.0;   // 대한민국: 기대수명 상위권, 만족도 중간권
+  S.ind1='기대수명(연습용·년)';
+  S.ind2='삶의 만족도(연습용·10점 만점)';
+  S.rows=rows;S.focusIdx=0;S.loaded=true;S.calc=null;S.sample=[];
+  fb('uploadFeedback','info',`연습용 가상 데이터(세계 ${names.length}개국의 기대수명·삶의 만족도)를 불러왔습니다. 실제 값이 아닙니다.`);
+  renderPreview();
+}
+function renderPreview(){
+  document.getElementById('dataPreview').style.display='block';
+  document.getElementById('ind1name').textContent=S.ind1;
+  document.getElementById('ind2name').textContent=S.ind2;
+  document.getElementById('nCount').textContent=S.rows.length;
+  const sel=document.getElementById('focusSelect');
+  sel.innerHTML=S.rows.map((r,i)=>`<option value="${i}">${esc(r.name)}</option>`).join('');
+  sel.value=S.focusIdx;
+  const t=document.getElementById('previewTable');
+  t.innerHTML=`<thead><tr><th>개체</th><th>${esc(S.ind1)}</th><th>${esc(S.ind2)}</th></tr></thead><tbody>`+
+    S.rows.map((r,i)=>`<tr class="${i===S.focusIdx?'highlight':''}"><td>${esc(r.name)}</td><td>${fmt(r.v1)}</td><td>${fmt(r.v2)}</td></tr>`).join('')+`</tbody>`;
+}
+function setFocus(){S.focusIdx=+document.getElementById('focusSelect').value;const s5=document.getElementById('focusSelect5');if(s5)s5.value=S.focusIdx;renderPreview();}
+function fb(id,type,msg){const e=document.getElementById(id);e.className='fb show '+type;e.innerHTML=`<span>${type==='ok'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg>':type==='bad'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>':type==='warn'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>':'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'}</span><span>${msg}</span>`;}
+
+/* ============ 히스토그램 그리기 ============ */
+function drawHist(containerId, data, accent, kOverride){
+  const W=620,H=300,pad={l:46,r:18,t:16,b:38};
+  const n=data.length, mn=Math.min(...data), mx=Math.max(...data);
+  const m=mean(data), s=sdP(data);
+  const k=kOverride? Math.max(3,Math.min(20,Math.round(kOverride))) : Math.max(6,Math.min(11,Math.round(Math.sqrt(n))));
+  const lo=Math.min(mn, m-3.2*s), hi=Math.max(mx, m+3.2*s);
+  const bw=(mx-mn)/k || 1;
+  const bins=new Array(k).fill(0);
+  data.forEach(v=>{let idx=Math.floor((v-mn)/bw);if(idx>=k)idx=k-1;if(idx<0)idx=0;bins[idx]++;});
+  const dens=bins.map(c=>c/(n*bw));
+  const pdfMax=stdNormPdf(0)/s;
+  const yMax=Math.max(Math.max(...dens), pdfMax)*1.15;
+  const X=v=>pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r);
+  const Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
+  // axis
+  svg+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#d4d4d8"/>`;
+  // bars
+  for(let i=0;i<k;i++){
+    const x0=X(mn+i*bw), x1=X(mn+(i+1)*bw), y=Y(dens[i]);
+    svg+=`<rect x="${x0+1}" y="${y}" width="${Math.max(0,x1-x0-2)}" height="${H-pad.b-y}" fill="var(--accent-2-soft)" stroke="var(--accent-2)" stroke-width="1" rx="2"/>`;
+  }
+  // normal curve
+  let d='';
+  for(let p=0;p<=120;p++){const xv=lo+(hi-lo)*p/120;const yv=stdNormPdf((xv-m)/s)/s;d+=(p?'L':'M')+X(xv).toFixed(1)+' '+Y(yv).toFixed(1)+' ';}
+  svg+=`<path d="${d}" fill="none" stroke="${accent}" stroke-width="2.4"/>`;
+  // mean line
+  svg+=`<line x1="${X(m)}" y1="${pad.t}" x2="${X(m)}" y2="${H-pad.b}" stroke="${accent}" stroke-width="1" stroke-dasharray="4 4" opacity=".5"/>`;
+  svg+=`<text x="${X(m)}" y="${pad.t-2}" font-size="10" fill="${accent}" text-anchor="middle">평균</text>`;
+  // x ticks
+  for(let t=0;t<=4;t++){const xv=lo+(hi-lo)*t/4;svg+=`<text x="${X(xv)}" y="${H-pad.b+16}" font-size="10" fill="#a1a1aa" text-anchor="middle">${fmt(xv,1)}</text>`;}
+  svg+=`</svg>`;
+  document.getElementById(containerId).innerHTML=svg;
+}
+
+function renderHistStage(){
+  if(!S.loaded){document.getElementById('histArea').style.display='none';document.getElementById('noDataMsg2').style.display='block';return;}
+  document.getElementById('noDataMsg2').style.display='none';
+  document.getElementById('histArea').style.display='block';
+  document.getElementById('h1title').textContent=S.ind1;
+  document.getElementById('h2title').textContent=S.ind2;
+  // 슬라이더 기본값 = 자동 계급 수(√n)
+  const autoK=Math.max(6,Math.min(11,Math.round(Math.sqrt(S.rows.length))));
+  ['1','2'].forEach(idx=>{
+    const sl=document.getElementById('binSlider'+idx);
+    if(sl && !sl.dataset.touched){ sl.value=autoK; const lab=document.getElementById('binVal'+idx); if(lab) lab.textContent=autoK; }
+  });
+  drawBoth();
+}
+function drawBoth(){
+  const k1=+document.getElementById('binSlider1').value;
+  const k2=+document.getElementById('binSlider2').value;
+  drawHist('hist1',vals(1),'var(--accent)',k1);
+  drawHist('hist2',vals(2),'var(--accent)',k2);
+  document.getElementById('judge1').innerHTML=judgeBlock(vals(1));
+  document.getElementById('judge2').innerHTML=judgeBlock(vals(2));
+}
+function setBins(idx){
+  const sl=document.getElementById('binSlider'+idx); sl.dataset.touched='1';
+  document.getElementById('binVal'+idx).textContent=sl.value;
+  drawHist('hist'+idx, vals(+idx), 'var(--accent)', +sl.value);
+}
+function judgeBlock(data){
+  const m=mean(data),md=median(data),s=sdP(data);
+  const sym=Math.abs(m-md)<0.15*s;
+  const cue=sym?'평균과 중앙값이 비슷합니다 → 대칭에 가까운 편'
+               :'평균과 중앙값 차이가 큽니다 → 한쪽으로 치우쳤을 수 있음';
+  return `<div class="statchip"><div class="k">평균 · 중앙값 · 표준편차</div><div class="v" style="font-size:15px;">${fmt(m,1)} · ${fmt(md,1)} · ${fmt(s,1)}</div></div>
+  <div class="statchip"><div class="k">스스로 판단하기</div><div class="v" style="font-size:12.5px;line-height:1.5;color:var(--ink-2);">막대가 종 모양 곡선과 닮았나요? 좌우 대칭인가요, 한쪽 꼬리가 긴가요?<br><span style="color:var(--ink-3);">참고: ${cue}</span></div></div>`;
+}
+
+/* ============ 정규분포 반례 갤러리 ============ */
+function miniHist(dens, lo, hi){
+  // dens: array of relative bar heights (0~1). draw bars + fitted normal (by implied mean/sd of the density shape)
+  const W=300,H=150,pad={l:8,r:8,t:10,b:18};
+  const k=dens.length, bw=(hi-lo)/k;
+  // implied mean & var from the density profile (treat dens as weights at bin centers)
+  const centers=dens.map((_,i)=>lo+(i+0.5)*bw);
+  const tot=dens.reduce((s,d)=>s+d,0)||1;
+  const m=centers.reduce((s,c,i)=>s+c*dens[i],0)/tot;
+  const v=centers.reduce((s,c,i)=>s+(c-m)*(c-m)*dens[i],0)/tot;
+  const sd=Math.sqrt(v)||1;
+  const peak=Math.max(...dens);
+  const normMax=stdNormPdf(0)/sd;
+  const yMax=Math.max(peak, normMax*bw)*1.18;
+  const X=x=>pad.l+(x-lo)/(hi-lo)*(W-pad.l-pad.r);
+  const Y=y=>H-pad.b-(y/yMax)*(H-pad.t-pad.b);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;">`;
+  svg+=`<line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#d4d4d8"/>`;
+  for(let i=0;i<k;i++){const x0=X(lo+i*bw),x1=X(lo+(i+1)*bw),y=Y(dens[i]);
+    svg+=`<rect x="${(x0+1).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(0,x1-x0-2).toFixed(1)}" height="${(H-pad.b-y).toFixed(1)}" fill="var(--accent-2-soft)" stroke="var(--accent-2)" stroke-width="1" rx="2"/>`;}
+  let d='';for(let p=0;p<=120;p++){const xv=lo+(hi-lo)*p/120;const yv=stdNormPdf((xv-m)/sd)/sd*bw;d+=(p?'L':'M')+X(xv).toFixed(1)+' '+Y(yv).toFixed(1)+' ';}
+  svg+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>`;
+  svg+=`</svg>`;
+  return svg;
+}
+function drawNonExamples(){
+  const box=document.getElementById('nonExampleGallery'); if(!box||box.dataset.built) return;
+  const cards=[
+    {tag:'오른쪽 치우침', title:'한쪽으로 긴 꼬리',
+     dens:[0.95,1.0,0.72,0.45,0.28,0.16,0.09,0.05,0.03,0.02], lo:0,hi:10,
+     why:'왼쪽에 몰리고 오른쪽으로 꼬리가 깁니다. 평균이 중앙값보다 크게 오른쪽으로 끌려갑니다. <b>소득·재산·인구·가격</b> 등에서 흔해요.'},
+    {tag:'봉우리 2개', title:'이봉(두 집단이 섞임)',
+     dens:[0.3,0.7,1.0,0.55,0.2,0.2,0.55,1.0,0.7,0.3], lo:0,hi:10,
+     why:'봉우리가 둘이라 가운데가 오히려 움푹합니다. 성질이 다른 <b>두 집단</b>(예: 남녀 합친 키)이 한 데 섞이면 나타납니다.'},
+    {tag:'한쪽 끝에 몰림', title:'천장·바닥 효과',
+     dens:[0.05,0.06,0.08,0.1,0.14,0.2,0.32,0.55,0.85,1.0], lo:0,hi:10,
+     why:'아주 쉬운 시험처럼 다수가 최댓값 근처에 몰리면 한쪽 끝에 쌓입니다(꼬리가 한쪽만). <b>만점 비율이 큰 점수</b> 등.'},
+    {tag:'특징 없음', title:'평평함(균등에 가까움)',
+     dens:[0.92,1.0,0.95,0.98,0.9,1.0,0.93,0.97,0.9,0.95], lo:0,hi:10,
+     why:'어느 구간이나 비슷하게 평평해 봉우리가 뚜렷하지 않습니다. <b>특별한 중심이 없는</b> 데이터예요.'},
+  ];
+  box.innerHTML=cards.map(c=>`<div class="ne-card">
+    <span class="ne-tag">${c.tag}</span>
+    <h4>${c.title}</h4>
+    ${miniHist(c.dens,c.lo,c.hi)}
+    <div class="ne-why">${c.why}</div>
+  </div>`).join('');
+  box.dataset.built='1';
+}
+/* ============ 도입(워밍업): 표준화 직관 — 서로 다른 과목 비교 ============ */
+const WARM={ kor:{name:'국어',m:75,s:8,color:'var(--accent)'}, mat:{name:'수학',m:55,s:12,color:'#0d9488'} };
+function drawWarm(){
+  const box=document.getElementById('warmchart'); if(!box) return;
+  const K=WARM.kor, M=WARM.mat;
+  const a=+document.getElementById('wA').value, b=+document.getElementById('wB').value; // a=민준 국어, b=서연 수학
+  document.getElementById('wAv').textContent=a;
+  document.getElementById('wBv').textContent=b;
+  const za=(a-K.m)/K.s, zb=(b-M.m)/M.s;
+  const norm=(x,m,s)=>stdNormPdf((x-m)/s)/s;
+  const W=680,H=270,topPad=22,botPad=30,gap=34;
+  const padX=14;
+  // left panel ~62%, right panel ~38%
+  const leftW=(W-padX*2-gap)*0.60, rightW=(W-padX*2-gap)*0.40;
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+
+  // ===== LEFT: both subjects on a SHARED score axis & SHARED height scale =====
+  const sLo=20, sHi=100;               // 공통 점수축
+  const LX=v=>padX+(Math.max(sLo,Math.min(sHi,v))-sLo)/(sHi-sLo)*leftW;
+  // 공통 세로 스케일: 가장 뾰족한 분포(σ 작은 국어)의 정점 기준
+  const yPeak=Math.max(norm(K.m,K.m,K.s), norm(M.m,M.m,M.s))*1.18;
+  const LY=v=>H-botPad-(v/yPeak)*(H-topPad-botPad);
+  svg+=`<text x="${padX}" y="${topPad-8}" font-size="10.5" font-weight="700" fill="var(--ink-2)">같은 점수축 위에 두 과목 분포 (면적은 둘 다 1)</text>`;
+  svg+=`<line x1="${padX}" y1="${LY(0)}" x2="${padX+leftW}" y2="${LY(0)}" stroke="#d4d4d8"/>`;
+  // x ticks
+  for(let t=20;t<=100;t+=20){svg+=`<line x1="${LX(t)}" y1="${LY(0)}" x2="${LX(t)}" y2="${LY(0)+4}" stroke="#d4d4d8"/><text x="${LX(t)}" y="${LY(0)+15}" font-size="8.5" fill="#a1a1aa" text-anchor="middle">${t}</text>`;}
+  function curve(m,s,color,fillOp){
+    let d='';for(let p=0;p<=140;p++){const xv=sLo+(sHi-sLo)*p/140;d+=(p?'L':'M')+LX(xv).toFixed(1)+' '+LY(norm(xv,m,s)).toFixed(1)+' ';}
+    svg+=`<path d="${d}" fill="${color}" fill-opacity="${fillOp}" stroke="${color}" stroke-width="2.2"/>`;
+    svg+=`<line x1="${LX(m)}" y1="${LY(0)}" x2="${LX(m)}" y2="${LY(norm(m,m,s))}" stroke="${color}" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>`;
+  }
+  curve(K.m,K.s,K.color,'.07');   // 국어: 좁고 높게
+  curve(M.m,M.s,M.color,'.07');   // 수학: 넓고 낮게
+  // labels for each curve near its peak
+  svg+=`<text x="${LX(K.m)}" y="${LY(norm(K.m,K.m,K.s))-6}" font-size="9.5" fill="${K.color}" text-anchor="middle" font-weight="700">국어 σ${K.s}</text>`;
+  svg+=`<text x="${LX(M.m)}" y="${LY(norm(M.m,M.m,M.s))-6}" font-size="9.5" fill="${M.color}" text-anchor="middle" font-weight="700">수학 σ${M.s}</text>`;
+  // student marks
+  function markL(val,m,s,color,who){const cx=LX(val);
+    svg+=`<line x1="${cx}" y1="${LY(0)}" x2="${cx}" y2="${LY(norm(val,m,s))}" stroke="${color}" stroke-width="2"/>`+
+         `<circle cx="${cx}" cy="${LY(norm(val,m,s))}" r="4.5" fill="${color}"/>`+
+         `<text x="${cx}" y="${LY(0)+27}" font-size="9.5" fill="${color}" text-anchor="middle" font-weight="800">${who} ${val}</text>`;}
+  markL(a,K.m,K.s,K.color,'민준'); markL(b,M.m,M.s,M.color,'서연');
+
+  // ===== RIGHT: standard normal — both converge =====
+  const ox=padX+leftW+gap;
+  const Rlo=-3.6,Rhi=3.6;
+  const RX=v=>ox+(Math.max(Rlo,Math.min(Rhi,v))-Rlo)/(Rhi-Rlo)*rightW;
+  const yMaxR=stdNormPdf(0)*1.18;
+  const RY=v=>H-botPad-(v/yMaxR)*(H-topPad-botPad);
+  svg+=`<text x="${ox}" y="${topPad-8}" font-size="10.5" font-weight="800" fill="var(--ink)">Z로 옮기면 → N(0,1)</text>`;
+  svg+=`<line x1="${ox}" y1="${RY(0)}" x2="${ox+rightW}" y2="${RY(0)}" stroke="#d4d4d8"/>`;
+  let dR='';for(let p=0;p<=100;p++){const xv=Rlo+(Rhi-Rlo)*p/100;dR+=(p?'L':'M')+RX(xv).toFixed(1)+' '+RY(stdNormPdf(xv)).toFixed(1)+' ';}
+  svg+=`<path d="${dR}" fill="#475569" fill-opacity=".06" stroke="#475569" stroke-width="2.2"/>`;
+  for(let t=-3;t<=3;t++){svg+=`<text x="${RX(t)}" y="${RY(0)+13}" font-size="8" fill="#a1a1aa" text-anchor="middle">${t>0?'+':''}${t}</text>`;}
+  function markR(z,color,label,up){const cx=RX(z);const zc=Math.max(Rlo,Math.min(Rhi,z));
+    svg+=`<line x1="${cx}" y1="${RY(0)}" x2="${cx}" y2="${RY(stdNormPdf(zc))}" stroke="${color}" stroke-width="2"/>`+
+         `<circle cx="${cx}" cy="${RY(stdNormPdf(zc))}" r="4.5" fill="${color}"/>`+
+         `<text x="${cx}" y="${RY(stdNormPdf(zc))-(up?18:7)}" font-size="9.5" fill="${color}" text-anchor="middle" font-weight="800">${label}</text>`;}
+  const close=Math.abs(za-zb)<0.3;
+  markR(za,K.color,`민준 ${fmt(za,2)}σ`, close);
+  markR(zb,M.color,`서연 ${fmt(zb,2)}σ`, false);
+  svg+=`</svg>`;
+  box.innerHTML=svg;
+  // readout
+  let verdict;
+  if(Math.abs(za-zb)<0.05) verdict='두 사람의 상대적 위치가 <b>거의 같습니다</b> — 원점수는 다른데도요!';
+  else if(za>zb) verdict='<b style="color:var(--accent);">민준</b>이 자기 과목에서 상대적으로 더 잘했습니다';
+  else verdict='<b style="color:#0d9488;">서연</b>이 자기 과목에서 상대적으로 더 잘했습니다';
+  document.getElementById('warmReadout').innerHTML=
+    `민준 국어 ${a}점 → Z <b style="color:var(--accent);">${fmt(za,2)}σ</b> · 서연 수학 ${b}점 → Z <b style="color:#0d9488;">${fmt(zb,2)}σ</b>. ${verdict} <span style="color:var(--ink-3);">수학(σ ${M.s})이 국어(σ ${K.s})보다 더 넓고 낮게 퍼진 게 보이죠? 그래서 원점수가 아니라 Z로 봐야 합니다.</span>`;
+}
+
+function drawProperty(){
+  const box=document.getElementById('propchart'); if(!box) return;
+  const mu=parseFloat(document.getElementById('muSlider').value);
+  const sg=parseFloat(document.getElementById('sgSlider').value);
+  document.getElementById('muVal').textContent=fmt(mu,1);
+  document.getElementById('sgVal').textContent=fmt(sg,1);
+  const W=620,H=260,pad={l:20,r:20,t:18,b:30};
+  const lo=-8,hi=8;
+  const X=v=>pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r);
+  const yMax=stdNormPdf(0)/0.5*1.05; // tallest possible (σ=0.5)
+  const Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
+  const norm=(x,m,s)=>stdNormPdf((x-m)/s)/s;
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  svg+=`<line x1="${pad.l}" y1="${Y(0)}" x2="${W-pad.r}" y2="${Y(0)}" stroke="#d4d4d8"/>`;
+  // reference N(0,1)
+  let d0='';for(let p=0;p<=160;p++){const xv=lo+(hi-lo)*p/160;d0+=(p?'L':'M')+X(xv).toFixed(1)+' '+Y(norm(xv,0,1)).toFixed(1)+' ';}
+  svg+=`<path d="${d0}" fill="none" stroke="#9ca3af" stroke-width="1.6" stroke-dasharray="5 4"/>`;
+  // user curve
+  let d='';for(let p=0;p<=160;p++){const xv=lo+(hi-lo)*p/160;d+=(p?'L':'M')+X(xv).toFixed(1)+' '+Y(norm(xv,mu,sg)).toFixed(1)+' ';}
+  svg+=`<path d="${d}" fill="var(--accent)" fill-opacity=".10" stroke="var(--accent)" stroke-width="2.6"/>`;
+  // mean axis
+  svg+=`<line x1="${X(mu)}" y1="${Y(0)}" x2="${X(mu)}" y2="${Y(norm(mu,mu,sg))}" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="4 3"/>`;
+  svg+=`<text x="${X(mu)}" y="${Y(0)+16}" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">m=${fmt(mu,1)}</text>`;
+  for(let t=-8;t<=8;t+=2){svg+=`<text x="${X(t)}" y="${Y(0)+16}" font-size="9" fill="#a1a1aa" text-anchor="middle">${t}</text>`;}
+  svg+=`</svg>`;
+  box.innerHTML=svg;
+}
+function initCalcStage(){
+  const sel=document.getElementById('calcIndicator');
+  if(!S.loaded){sel.innerHTML='<option>데이터를 먼저 불러오세요</option>';return;}
+  sel.innerHTML=`<option value="1">${esc(S.ind1)}</option><option value="2">${esc(S.ind2)}</option>`;
+}
+function resetSample(){const b=document.getElementById('sampleBox');if(b)b.style.display='none';const pr=document.getElementById('popReveal');if(pr){pr.className='fb';pr.innerHTML='';}}
+function drawSample(){
+  if(!S.loaded){alert('1단계에서 데이터를 먼저 불러오세요.');return;}
+  const i=+document.getElementById('calcIndicator').value;
+  const pool=vals(i).slice();
+  const k=Math.min(8,pool.length);
+  const samp=[];const idxs=[...pool.keys()];
+  for(let j=0;j<k;j++){const r=Math.floor(Math.random()*idxs.length);samp.push(pool[idxs[r]]);idxs.splice(r,1);}
+  S.sample=samp.map(x=>Math.round(x*100)/100);
+  S.sampleInd=col(i);
+  document.getElementById('sampleBox').style.display='block';
+  document.getElementById('sampleVals').textContent=S.sample.join(',  ');
+  document.getElementById('formulaReminder').innerHTML=
+    `평균 \\(m=\\dfrac{1}{n}\\sum x_i\\) , 분산 \\(=\\dfrac{1}{n}\\sum (x_i-m)^2\\) , 표준편차 \\(=\\sqrt{\\text{분산}}\\)  (n=${S.sample.length})`;
+  ['inMean','inVar','inSd'].forEach(id=>document.getElementById(id).value='');
+  const pr=document.getElementById('popReveal');if(pr){pr.className='fb';pr.innerHTML='';}
+  S.calc=null;
+  renderMath();
+}
+/* 보고서 생성 시점에 직접계산 입력값을 캡처(표본 기준 정답과 비교 — 교사용 코드에만 반영) */
+function captureCalc(){
+  if(!S.sample||S.sample.length===0)return null;
+  const m=mean(S.sample),v=varP(S.sample),s=sdP(S.sample);
+  const um=parseFloat(document.getElementById('inMean').value);
+  const uv=parseFloat(document.getElementById('inVar').value);
+  const us=parseFloat(document.getElementById('inSd').value);
+  const i=+document.getElementById('calcIndicator').value;
+  const all=vals(i);
+  return {ind:col(i), sample:S.sample.slice(), m, v, s,
+          popM:mean(all), popV:varP(all), popS:sdP(all), popN:all.length,
+          userM:um, userV:uv, userS:us};
+}
+/* 세 값을 모두 입력한 뒤 누르면 전체 데이터의 평균·분산·표준편차를 보여 준다(정답 채점이 아니라 표본↔전체 비교용) */
+function revealPopStats(){
+  if(!S.sample||S.sample.length===0){fb('popReveal','warn','먼저 위에서 <b>무작위 표본 8개</b>를 뽑아 주세요.');return;}
+  const um=parseFloat(document.getElementById('inMean').value);
+  const uv=parseFloat(document.getElementById('inVar').value);
+  const us=parseFloat(document.getElementById('inSd').value);
+  if([um,uv,us].some(x=>!isFinite(x))){fb('popReveal','warn','평균·분산·표준편차 <b>세 값을 모두 입력</b>한 뒤 눌러 주세요.');return;}
+  const i=+document.getElementById('calcIndicator').value;
+  const all=vals(i);
+  const pm=mean(all),pv=varP(all),ps=sdP(all);
+  const e=document.getElementById('popReveal');
+  e.className='fb show info';
+  e.innerHTML=
+    `<span><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>
+     <span style="width:100%;">
+       <b>전체 데이터(n=${all.length}) ${esc(col(i))}</b>
+       <table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:13.5px;">
+         <tr><th style="text-align:left;padding:5px 8px;border-bottom:1px solid var(--border);">항목</th><th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);">내가 입력한 표본 값</th><th style="text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);">전체 데이터 값</th></tr>
+         <tr><td style="padding:5px 8px;">평균</td><td style="text-align:right;padding:5px 8px;font-variant-numeric:tabular-nums;">${fmt(um)}</td><td style="text-align:right;padding:5px 8px;font-weight:700;font-variant-numeric:tabular-nums;">${fmt(pm)}</td></tr>
+         <tr><td style="padding:5px 8px;">분산(÷n)</td><td style="text-align:right;padding:5px 8px;font-variant-numeric:tabular-nums;">${fmt(uv)}</td><td style="text-align:right;padding:5px 8px;font-weight:700;font-variant-numeric:tabular-nums;">${fmt(pv)}</td></tr>
+         <tr><td style="padding:5px 8px;">표준편차</td><td style="text-align:right;padding:5px 8px;font-variant-numeric:tabular-nums;">${fmt(us)}</td><td style="text-align:right;padding:5px 8px;font-weight:700;font-variant-numeric:tabular-nums;">${fmt(ps)}</td></tr>
+       </table>
+       <span class="muted" style="display:block;margin-top:8px;font-size:12.5px;">표본 8개로 구한 값과 전체 데이터 값을 비교해 보세요. 표본을 다시 뽑으면 값이 조금씩 달라지지만 전체 값에 가까워집니다. (이 표는 정답 채점이 아니라 <b>표본↔전체 비교</b>를 돕기 위한 것입니다.)</span>
+     </span>`;
+}
+/* ---- 손계산 보조 계산기 ---- */
+function runCalc(){
+  const raw=document.getElementById('calcExpr').value.trim();
+  const out=document.getElementById('calcResult');
+  if(!raw){out.textContent='';return;}
+  // 허용 문자만: 숫자, + - * / ( ) . 공백, ×÷, sqrt
+  let expr=raw.replace(/×/g,'*').replace(/÷/g,'/');
+  if(/[^0-9+\-*/().\s a-z]/i.test(expr) || /[a-z]/i.test(expr.replace(/sqrt/gi,''))){
+    out.style.color='var(--bad)'; out.textContent='계산할 수 없는 문자가 있어요. 숫자와 + − × ÷ ( ) . sqrt 만 사용하세요.'; return;
+  }
+  expr=expr.replace(/sqrt\s*\(/gi,'Math.sqrt(');
+  try{
+    // 안전 평가: Function 으로 제한된 식만 계산
+    const val=Function('"use strict";return ('+expr+')')();
+    if(typeof val!=='number'||!isFinite(val)){throw new Error('bad');}
+    out.style.color='var(--accent)';
+    out.textContent='= '+ (Math.round(val*1e6)/1e6).toLocaleString('ko-KR',{maximumFractionDigits:6});
+  }catch(e){
+    out.style.color='var(--bad)'; out.textContent='식을 계산할 수 없어요. 괄호 짝과 연산 기호를 확인하세요.';
+  }
+}
+
+/* ============ 4단계: 표준화·확률 ============ */
+function buildZTable(){
+  const wrap=document.getElementById('ztableWrap');
+  if(wrap.dataset.built)return;
+  let html='<table class="zt"><thead><tr><th>z</th>';
+  for(let c=0;c<10;c++)html+=`<th>.0${c}</th>`;
+  html+='</tr></thead><tbody>';
+  for(let r=0;r<=30;r++){
+    const zb=r/10;
+    html+=`<tr><td class="zhead">${zb.toFixed(1)}</td>`;
+    for(let c=0;c<10;c++){const z=zb+c/100;html+=`<td>${(stdNormCdf(z)-0.5).toFixed(4)}</td>`;}
+    html+='</tr>';
+  }
+  html+='</tbody></table>';
+  wrap.innerHTML=html;wrap.dataset.built='1';
+}
+function initProbStage(){
+  if(!S.loaded){document.getElementById('probArea').style.display='none';document.getElementById('noDataMsg4').style.display='block';return;}
+  document.getElementById('noDataMsg4').style.display='none';
+  document.getElementById('probArea').style.display='block';
+  const sel=document.getElementById('probIndicator');
+  sel.innerHTML=`<option value="1">${esc(S.ind1)}</option><option value="2">${esc(S.ind2)}</option>`;
+  const fsel=document.getElementById('probFocus');
+  fsel.innerHTML=S.rows.map((r,i)=>`<option value="${i}">${esc(r.name)}</option>`).join('');
+  fsel.value=S.focusIdx;
+  buildZTable();
+  refreshProbContext();
+}
+function setProbFocus(){
+  S.focusIdx=+document.getElementById('probFocus').value;
+  const s5=document.getElementById('focusSelect5');if(s5)s5.value=S.focusIdx;
+  const s0=document.getElementById('focusSelect');if(s0)s0.value=S.focusIdx;
+  refreshProbContext();
+}
+function onProbIndicatorChange(){ refreshProbContext(); }
+function refreshProbContext(){
+  const i=+document.getElementById('probIndicator').value;
+  const all=vals(i),m=mean(all),s=sdP(all);
+  const fx=S.rows[S.focusIdx];const fv=i===1?fx.v1:fx.v2;
+  document.getElementById('probX').value=fv;
+  document.getElementById('probXlabel').textContent=`기준값 X — ${fx.name}의 ${i===1?S.ind1:S.ind2} 값`;
+  const pe=document.getElementById('probEmpirical');if(pe)pe.style.display='none';
+  const pc=document.getElementById('probChartBox');if(pc)pc.style.display='none';
+  document.getElementById('probFeedback').className='fb';
+  if(s===0){
+    document.getElementById('probContext').innerHTML=
+      `이 지표는 모든 값이 같아 표준편차 \\(\\sigma=0\\) 입니다. 이 경우 \\(Z=\\dfrac{X-\\mu}{\\sigma}\\) 를 계산할 수 없습니다(0으로 나눌 수 없음). 1단계로 돌아가 값이 서로 다른 지표를 골라 주세요.`;
+    renderMath();return;
+  }
+  document.getElementById('probContext').innerHTML=
+    `이 지표의 전체 평균 \\(\\mu=${fmt(m,2)}\\), 표준편차 \\(\\sigma=${fmt(s,2)}\\) 입니다. 기준값 X는 대상 <b>${esc(fx.name)}</b>의 값 <b>${fmt(fv,2)}</b> 입니다(위 대상 선택으로 바꿀 수 있어요). 이 값에 대해 \\(Z=\\dfrac{X-\\mu}{\\sigma}\\) 를 직접 구해 보세요.`;
+  renderMath();
+}
+function checkProb(){
+  const i=+document.getElementById('probIndicator').value;
+  const all=vals(i),m=mean(all),s=sdP(all);
+  if(s===0){fb('probFeedback','warn','이 지표는 모든 값이 같아 표준편차가 0입니다. Z를 계산할 수 없으니 값이 서로 다른 지표를 골라 주세요.');document.getElementById('probFeedback').classList.add('show');return;}
+  const X=parseFloat(document.getElementById('probX').value);
+  const uz=parseFloat(document.getElementById('probZ').value);
+  const ua=parseFloat(document.getElementById('probAns').value);
+  if([X,uz,ua].some(x=>!isFinite(x))){fb('probFeedback','warn','기준값·Z·확률을 모두 입력해 주세요.');document.getElementById('probFeedback').classList.add('show');return;}
+  const trueZ=(X-m)/s;
+  const dir=document.getElementById('probDir').value;
+  const trueP= dir==='ge'? 1-stdNormCdf(trueZ) : stdNormCdf(trueZ);
+  // 학생이 직접 구한 Z(uz)에 대해 그림을 그리고, 그 z에 해당하는 넓이(확률)를 색칠해 보여 준다.
+  const userPfromZ = dir==='ge'? 1-stdNormCdf(uz) : stdNormCdf(uz);
+  fb('probFeedback','info','입력을 받았어요. 아래 그림은 <b>내가 구한 Z 값</b>을 기준으로 곡선 아래의 <b>넓이(=확률)</b>를 색칠한 것입니다. 색칠된 부분의 넓이가 곧 확률입니다.');
+  document.getElementById('probFeedback').classList.add('show');
+  drawZChart(uz,dir,userPfromZ);
+  // 보고서 기록용: 학생 입력값과 정답값을 함께 보관(정확 여부는 교사용 코드에만 반영)
+  const zOk=Math.abs(uz-trueZ)<=0.05;
+  const pOk=Math.abs(ua-trueP)<=0.02;
+  S.prob={focusName:S.rows[S.focusIdx].name, ind:(i===1?S.ind1:S.ind2), X:X, dir:dir, trueZ:trueZ, trueP:trueP, userZ:uz, userP:ua, correct:(zOk&&pOk)};
+  // 내가 구한 z의 넓이 vs 실제 데이터에서 직접 센 비율 — 확률이 곧 '넓이'임을 데이터로 확인
+  const cnt= dir==='ge'? all.filter(v=>v>=X).length : all.filter(v=>v<=X).length;
+  const emp=cnt/all.length;
+  document.getElementById('probEmpirical').style.display='block';
+  document.getElementById('probEmpirical').innerHTML=
+    `<b><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> 내가 구한 확률 vs 실제 데이터</b>
+     <div style="margin-top:6px;">내가 구한 Z로 계산한 확률(색칠된 넓이) <b>${fmt(userPfromZ,3)}</b> · 실제 데이터에서 직접 센 비율 ${all.length}개 중 ${cnt}개 = <b>${fmt(emp,3)}</b>.</div>
+     <div style="margin-top:6px;font-size:12.5px;color:var(--ink-3);">두 값이 비슷하다면 Z·확률을 잘 구한 것입니다. 많이 다르다면 표준화나 표 읽기를 다시 확인해 보세요. 정규모델 확률의 진짜 가치는 <b>더 큰 모집단이나 앞으로의 관측값</b>으로 일반화할 때 드러납니다 — 예: 수능 전체 응시자의 백분위 추정, 공정의 불량률 예측처럼요.</div>`;
+}
+function drawZChart(z,dir,p){
+  document.getElementById('probChartBox').style.display='block';
+  const W=620,H=280,pad={l:30,r:18,t:18,b:34};
+  const lo=-3.6,hi=3.6;
+  const X=v=>pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r);
+  const yMax=stdNormPdf(0)*1.18;
+  const Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  // shaded area
+  let area='M'+X(dir==='ge'?z:lo)+' '+Y(0)+' ';
+  const a0=dir==='ge'?z:lo, a1=dir==='ge'?hi:z;
+  for(let q=0;q<=100;q++){const xv=a0+(a1-a0)*q/100;area+='L'+X(xv).toFixed(1)+' '+Y(stdNormPdf(xv)).toFixed(1)+' ';}
+  area+='L'+X(a1)+' '+Y(0)+' Z';
+  svg+=`<path d="${area}" fill="var(--accent)" opacity=".18"/>`;
+  // curve
+  let d='';for(let q=0;q<=160;q++){const xv=lo+(hi-lo)*q/160;d+=(q?'L':'M')+X(xv).toFixed(1)+' '+Y(stdNormPdf(xv)).toFixed(1)+' ';}
+  svg+=`<path d="${d}" fill="none" stroke="var(--accent)" stroke-width="2.4"/>`;
+  svg+=`<line x1="${pad.l}" y1="${Y(0)}" x2="${W-pad.r}" y2="${Y(0)}" stroke="#d4d4d8"/>`;
+  // z line
+  svg+=`<line x1="${X(z)}" y1="${Y(0)}" x2="${X(z)}" y2="${Y(stdNormPdf(z))}" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/>`;
+  svg+=`<text x="${X(z)}" y="${Y(0)+16}" font-size="11" fill="var(--accent)" text-anchor="middle" font-weight="700">z=${fmt(z,2)}</text>`;
+  for(let t=-3;t<=3;t++){svg+=`<text x="${X(t)}" y="${Y(0)+16}" font-size="9" fill="#a1a1aa" text-anchor="middle">${t}</text>`;}
+  svg+=`<text x="${X((a0+a1)/2)}" y="${pad.t+12}" font-size="13" fill="var(--accent)" text-anchor="middle" font-weight="800">넓이 ≈ ${fmt(p,4)}</text>`;
+  svg+=`</svg>`;
+  document.getElementById('zchart').innerHTML=svg;
+}
+
+/* ============ 5단계: 두 지표 비교 ============ */
+function initCompareStage(){
+  if(!S.loaded){document.getElementById('compareArea').style.display='none';document.getElementById('noDataMsg5').style.display='block';return;}
+  document.getElementById('noDataMsg5').style.display='none';
+  document.getElementById('compareArea').style.display='block';
+  const sel=document.getElementById('focusSelect5');
+  sel.innerHTML=S.rows.map((r,i)=>`<option value="${i}">${esc(r.name)}</option>`).join('');
+  sel.value=S.focusIdx;
+  const fx=S.rows[S.focusIdx];
+  const m1=mean(vals(1)),s1=sdP(vals(1)),m2=mean(vals(2)),s2=sdP(vals(2));
+  document.getElementById('compareContext').innerHTML=
+   `관심 대상 <b>${esc(fx.name)}</b> · <b>${esc(S.ind1)}</b>: 값 ${fmt(fx.v1,2)} (μ=${fmt(m1,2)}, σ=${fmt(s1,2)}) · <b>${esc(S.ind2)}</b>: 값 ${fmt(fx.v2,2)} (μ=${fmt(m2,2)}, σ=${fmt(s2,2)})`;
+  document.getElementById('zlab1').textContent=`${S.ind1} — Z 점수`;
+  document.getElementById('zlab2').textContent=`${S.ind2} — Z 점수`;
+}
+function setFocus5(){
+  S.focusIdx=+document.getElementById('focusSelect5').value;
+  const s1sel=document.getElementById('focusSelect'); if(s1sel) s1sel.value=S.focusIdx;
+  renderPreview();
+  initCompareStage();
+  // 입력값은 이전 대상 기준이므로 초기화하고, 새 대상의 실제 Z 위치를 바로 보여줌(탐색용)
+  document.getElementById('cmpZ1').value='';document.getElementById('cmpZ2').value='';
+  document.getElementById('cmpFeedback').className='fb';
+  const fx=S.rows[S.focusIdx];
+  const z1=zscore(fx.v1,vals(1)), z2=zscore(fx.v2,vals(2));
+  if(z1===null||z2===null){
+    document.getElementById('cmpChartBox').style.display='none';
+    fb('cmpFeedback','warn','두 지표 중 모든 값이 같은 지표가 있어(표준편차 0) Z 비교를 그릴 수 없습니다. 값이 서로 다른 지표로 다시 시도해 주세요.');
+    document.getElementById('cmpFeedback').classList.add('show');
+    return;
+  }
+  drawCompare(z1,z2,fx.name);
+}
+function checkCompare(){
+  if(!S.loaded||!S.rows[S.focusIdx])return;
+  const fx=S.rows[S.focusIdx];
+  const z1t=zscore(fx.v1,vals(1));
+  const z2t=zscore(fx.v2,vals(2));
+  if(z1t===null||z2t===null){fb('cmpFeedback','warn','두 지표 중 모든 값이 같은 지표가 있어(표준편차 0) 표준화할 수 없습니다.');document.getElementById('cmpFeedback').classList.add('show');return;}
+  const u1=parseFloat(document.getElementById('cmpZ1').value);
+  const u2=parseFloat(document.getElementById('cmpZ2').value);
+  if([u1,u2].some(x=>!isFinite(x))){fb('cmpFeedback','warn','두 Z 점수를 모두 입력해 주세요.');document.getElementById('cmpFeedback').classList.add('show');return;}
+  const ok1=Math.abs(u1-z1t)<=0.06, ok2=Math.abs(u2-z2t)<=0.06;
+  // 정답 여부와 무관하게 비교 시각화를 보여 준다(채점은 보고서의 교사용 코드로만).
+  fb('cmpFeedback','info','입력을 받았어요. 아래에 두 지표에서의 상대적 위치(σ 단위)를 함께 표시했습니다.');
+  document.getElementById('cmpFeedback').classList.add('show');
+  // 보고서 기록용: 학생이 입력한 두 Z와 정답 Z를 함께 보관(정확 여부는 교사용 코드에만 반영)
+  S.cmp={focusName:fx.name, z1t:z1t, z2t:z2t, userZ1:u1, userZ2:u2, correct:(ok1&&ok2)};
+  drawCompare(z1t,z2t,fx.name);
+}
+function drawCompare(z1,z2,name){
+  document.getElementById('cmpChartBox').style.display='block';
+  const W=620,H=200,pad={l:20,r:20,t:40,b:40};
+  const lo=-3,hi=3;
+  const X=v=>pad.l+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W-pad.l-pad.r);
+  const yA=80,yB=140;
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  [yA,yB].forEach(y=>{svg+=`<line x1="${pad.l}" y1="${y}" x2="${W-pad.r}" y2="${y}" stroke="#e4e4e7" stroke-width="2"/>`;});
+  // zero ticks
+  for(let t=-3;t<=3;t++){[yA,yB].forEach(y=>{svg+=`<line x1="${X(t)}" y1="${y-4}" x2="${X(t)}" y2="${y+4}" stroke="#d4d4d8"/>`;});svg+=`<text x="${X(t)}" y="${H-16}" font-size="9" fill="#a1a1aa" text-anchor="middle">${t>0?'+':''}${t}σ</text>`;}
+  svg+=`<line x1="${X(0)}" y1="${yA-18}" x2="${X(0)}" y2="${yB+18}" stroke="#d4d4d8" stroke-dasharray="3 3"/>`;
+  svg+=`<text x="${X(0)}" y="${yA-24}" font-size="9" fill="#a1a1aa" text-anchor="middle">평균(0)</text>`;
+  function dot(z,y,label){const c=z>=0?'var(--accent)':'var(--accent-2)';
+    return `<circle cx="${X(z)}" cy="${y}" r="8" fill="${c}"/><text x="${X(z)}" y="${y-14}" font-size="11" font-weight="800" fill="${c}" text-anchor="middle">${fmt(z,2)}σ</text>`;}
+  svg+=`<text x="${pad.l}" y="${yA-28}" font-size="11" font-weight="700" fill="var(--ink-2)">${esc(S.ind1)}</text>`+dot(z1,yA);
+  svg+=`<text x="${pad.l}" y="${yB-28}" font-size="11" font-weight="700" fill="var(--ink-2)">${esc(S.ind2)}</text>`+dot(z2,yB);
+  svg+=`</svg>`;
+  const more=Math.abs(z1)>Math.abs(z2)?S.ind1:S.ind2;
+  document.getElementById('cmpchart').innerHTML=svg+`<p style="text-align:center;font-size:13px;color:var(--ink-2);margin:6px 0 2px;"><b>${esc(name)}</b>은(는) <b style="color:var(--accent);">${esc(more)}</b> 쪽에서 평균으로부터 더 멀리(더 극단적으로) 떨어져 있습니다.</p>`;
+}
+
+/* ============ 교사용 검증(정답 확인) 코드 ============ */
+/* 학생이 직접 입력한 값과 정답을 비교해 항목별 상태를 만들고, 학생이 쉽게 알 수 없는 짧은 코드로 인코딩한다.
+   상태: O=정답, M=약간 오차, X=크게 틀림(직접계산은 오차 5이상), N=미응답 */
+const VKEY = 0x1F3A;            // 난독화용 고정값(암호 수준 아님, 교사 확인용)
+const VITEMS = ['STEP3 평균','STEP3 분산','STEP3 표준편차','STEP4 Z','STEP4 확률','STEP5 Z(지표1)','STEP5 Z(지표2)'];
+const VLABEL = {O:'정답', M:'약간 오차', X:'크게 틀림', N:'미응답'};
+function _vDigit(s){return {O:0,M:1,X:2,N:3}[s];}
+function _vChar(d){return ['O','M','X','N'][d];}
+function _bucket(user, correct, tol, gross){
+  if(!isFinite(user)||!isFinite(correct)) return 'N';
+  const e=Math.abs(user-correct);
+  if(e<=tol) return 'O';
+  if(e>=gross) return 'X';
+  return 'M';
+}
+/* STEP4 채점값을 입력칸에서 직접 계산(버튼 클릭 여부와 무관) */
+function computeProbFromDOM(){
+  if(!S.loaded) return null;
+  const iEl=document.getElementById('probIndicator'); if(!iEl) return null;
+  const i=+iEl.value;
+  const all=vals(i); if(!all||!all.length) return null;
+  const m=mean(all), s=sdP(all);
+  if(!isFinite(s)||s===0) return null;
+  const X=parseFloat((document.getElementById('probX')||{}).value);
+  if(!isFinite(X)) return null;
+  const dir=((document.getElementById('probDir')||{}).value)||'ge';
+  const trueZ=(X-m)/s;
+  const trueP= dir==='ge'? 1-stdNormCdf(trueZ) : stdNormCdf(trueZ);
+  const uz=parseFloat((document.getElementById('probZ')||{}).value);
+  const up=parseFloat((document.getElementById('probAns')||{}).value);
+  if(!isFinite(uz)&&!isFinite(up)) return null; // 두 칸 모두 비었으면 미설정
+  return {userZ:uz, userP:up, trueZ, trueP};
+}
+/* STEP5 채점값을 입력칸에서 직접 계산(버튼 클릭 여부와 무관) */
+function computeCmpFromDOM(){
+  if(!S.loaded||!S.rows[S.focusIdx]) return null;
+  const fx=S.rows[S.focusIdx];
+  const z1t=zscore(fx.v1,vals(1));
+  const z2t=zscore(fx.v2,vals(2));
+  if(z1t===null||z2t===null) return null;
+  const u1=parseFloat((document.getElementById('cmpZ1')||{}).value);
+  const u2=parseFloat((document.getElementById('cmpZ2')||{}).value);
+  if(!isFinite(u1)&&!isFinite(u2)) return null; // 두 칸 모두 비었으면 미설정
+  return {z1t, z2t, userZ1:u1, userZ2:u2};
+}
+/* 현재 상태 배열(7개)을 계산 — 입력칸에 값이 있으면 버튼을 누르지 않아도 채점된다 */
+function gatherStatuses(){
+  const c=captureCalc();
+  const st=[];
+  // STEP3: 표본 기준 정답과 비교, 크게 틀림 기준은 오차 5 이상
+  st.push(c? _bucket(c.userM, c.m, Math.max(0.05,Math.abs(c.m)*0.02), 5) : 'N');
+  st.push(c? _bucket(c.userV, c.v, Math.max(0.05,Math.abs(c.v)*0.02), 5) : 'N');
+  st.push(c? _bucket(c.userS, c.s, Math.max(0.05,Math.abs(c.s)*0.02), 5) : 'N');
+  // STEP4: 입력칸을 직접 읽어 채점(버튼 미클릭이어도 반영), 없으면 S.prob 보조 사용
+  let p4=computeProbFromDOM(); if(!p4) p4=S.prob||null;
+  st.push(p4? _bucket(p4.userZ, p4.trueZ, 0.05, 1.0) : 'N');
+  st.push(p4? _bucket(p4.userP, p4.trueP, 0.02, 0.12) : 'N');
+  // STEP5: 입력칸을 직접 읽어 채점(버튼 미클릭이어도 반영), 없으면 S.cmp 보조 사용
+  let p5=computeCmpFromDOM(); if(!p5) p5=S.cmp||null;
+  st.push(p5? _bucket(p5.userZ1, p5.z1t, 0.06, 1.0) : 'N');
+  st.push(p5? _bucket(p5.userZ2, p5.z2t, 0.06, 1.0) : 'N');
+  return st;
+}
+/* 상태 배열 → 코드 문자열 (의미있는 4글자가 항상 맨 끝) */
+function vEncode(statuses, seedName){
+  let val=0; for(let i=0;i<7;i++) val += _vDigit(statuses[i])*Math.pow(4,i);
+  const x = (val ^ (VKEY & 0x3FFF)) & 0x3FFF;
+  const body = x.toString(36).toUpperCase().padStart(3,'0');
+  const sum = statuses.reduce((a,s)=>a+_vDigit(s),0);
+  const chk = sum.toString(36).toUpperCase();
+  // 학생마다 달라 보이도록 이름 기반 접두어(디코더는 무시함)
+  let h=0; for(const ch of String(seedName||'')) h=(h*31+ch.charCodeAt(0))&0xFFFF;
+  const tag = 'DT'+(10+(h%90));
+  return `${tag}-${body}${chk}`;
+}
+
+/* ============ 6단계: 보고서 ============ */
+function buildReport(){
+  if(!S.loaded){document.getElementById('reportOut').innerHTML='<div class="callout dim">먼저 1단계에서 데이터를 불러오면 미리보기가 생성됩니다.</div>';return;}
+  const v1=vals(1),v2=vals(2),fx=S.rows[S.focusIdx];
+  const g=id=>{const v=document.getElementById(id).value.trim();return v?esc(v).replace(/\n/g,'<br>'):'<span style="color:#a1a1aa;">(작성 전)</span>';};
+  const haveSd=sdP(v1)>0&&sdP(v2)>0;
+  // 이수 확인(수행 여부만 표시 — 정답 여부는 보고서의 교사용 코드로만 확인)
+  const cap=captureCalc();
+  const calcDone=!!(cap&&isFinite(cap.userM)&&isFinite(cap.userV)&&isFinite(cap.userS));
+  const probDone=!!S.prob, cmpDone=!!S.cmp;
+  const allRecs=['rec1','rec2','rec3','rec4','rec5','rec6','rec7','recHardship'];
+  const recCount=allRecs.filter(id=>{const e=document.getElementById(id);return e&&e.value.trim();}).length;
+  const badge=ok=>ok?'<span style="color:#15803d;font-weight:700;">✔ 수행</span>':'<span style="color:#b45309;font-weight:700;">○ 미수행</span>';
+
+  let html='<div class="card" style="margin:0;">';
+  html+='<h2 style="font-size:18px;"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg> 탐구 보고서 미리보기</h2>';
+  const stuName=(document.getElementById('stuName')?.value||'').trim();
+  const stuId=(document.getElementById('stuId')?.value||'').trim();
+  const stuLine=(stuName||stuId)?` · 작성자: ${esc(stuId)} ${esc(stuName)}`:'';
+  html+=`<div class="callout dim"><b>데이터:</b> ${S.rows.length}개 개체 · ${esc(S.ind1)} / ${esc(S.ind2)} · 관심 대상: ${esc(fx.name)}${stuLine}</div>`;
+  // 이수 확인표(수행 여부)
+  html+=`<div style="margin-top:14px;font-size:13px;font-weight:700;color:var(--accent);">직접 수행 활동 이수 확인</div>
+    <table class="data" style="width:100%;margin-top:6px;font-size:13px;">
+      <tr><th>활동</th><th style="width:90px;">수행</th></tr>
+      <tr><td>평균·분산·표준편차 직접 계산</td><td>${badge(calcDone)}</td></tr>
+      <tr><td>표준화(Z)·확률 직접 계산</td><td>${badge(probDone)}</td></tr>
+      <tr><td>두 지표 Z 비교</td><td>${badge(cmpDone)}</td></tr>
+      <tr><td>탐구 기록 작성 (${recCount}/8)</td><td>${badge(recCount>=8)}</td></tr>
+    </table>`;
+
+  const block=(t,inner)=>`<div style="margin-top:18px;"><div style="font-size:13px;font-weight:700;color:var(--accent);">${t}</div><div style="font-size:14px;margin-top:5px;">${inner}</div></div>`;
+  html+=block('Ⅰ. 선택한 분야와 두 지표', g('rec1'));
+
+  // 분포 관찰 + 그래프
+  if(haveSd){
+    const img1=makeHistPNG(v1,S.ind1), img2=makeHistPNG(v2,S.ind2);
+    html+=block('Ⅲ. 분포 관찰과 정규성 판단',
+      `<img src="${img1}" style="width:100%;max-width:520px;border:1px solid var(--border);border-radius:8px;margin:6px 0;"/>
+       <img src="${img2}" style="width:100%;max-width:520px;border:1px solid var(--border);border-radius:8px;margin:6px 0;"/>
+       <div style="margin-top:6px;"><b>판단 근거:</b> ${g('rec2')}</div>`);
+  }
+  html+=block('Ⅳ. 평균·분산·표준편차 직접 계산', g('rec3'));
+  html+=block('Ⅴ. 표준화와 확률', g('rec4'));
+
+  // 두 지표 비교 + 그래프
+  if(haveSd){
+    const z1=(fx.v1-mean(v1))/sdP(v1), z2=(fx.v2-mean(v2))/sdP(v2);
+    const imgC=makeComparePNG(z1,z2);
+    html+=block('Ⅵ. 두 지표 비교 (Z 점수)',
+      `<div style="margin-bottom:6px;">${esc(fx.name)}: ${esc(S.ind1)} <b>${fmt(z1,2)}σ</b>, ${esc(S.ind2)} <b>${fmt(z2,2)}σ</b></div>
+       <img src="${imgC}" style="width:100%;max-width:520px;border:1px solid var(--border);border-radius:8px;margin:6px 0;"/>
+       <div style="margin-top:6px;">${g('rec5')}</div>`);
+  }
+  html+=block('Ⅶ. 데이터 분석과 결론', g('rec6'));
+  html+=block('Ⅷ. 분석 방법과 한계', g('rec7'));
+  html+=block('Ⅸ. 탐구하며 겪은 어려움과 극복', g('recHardship'));
+  html+='</div>';
+  document.getElementById('reportOut').innerHTML=html;
+}
+
+/* ---- 보고서용 차트(캔버스 → PNG) ---- */
+function makeHistPNG(data,title){
+  const W=720,H=380,pad={l:54,r:24,t:34,b:46};
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,W,H);
+  c.fillStyle='#18181b';c.font='bold 16px "Malgun Gothic",sans-serif';c.fillText(title,pad.l,22);
+  const n=data.length,mn=Math.min(...data),mx=Math.max(...data),m=mean(data),s=sdP(data);
+  const k=Math.max(6,Math.min(11,Math.round(Math.sqrt(n))));const bw=(mx-mn)/k||1;
+  const bins=new Array(k).fill(0);data.forEach(v=>{let i=Math.floor((v-mn)/bw);if(i>=k)i=k-1;if(i<0)i=0;bins[i]++;});
+  const dens=bins.map(cn=>cn/(n*bw));
+  const lo=Math.min(mn,m-3.2*s),hi=Math.max(mx,m+3.2*s);
+  const pdfMax=stdNormPdf(0)/s,yMax=Math.max(Math.max(...dens),pdfMax)*1.15;
+  const X=v=>pad.l+(v-lo)/(hi-lo)*(W-pad.l-pad.r),Y=v=>H-pad.b-(v/yMax)*(H-pad.t-pad.b);
+  c.strokeStyle='#d4d4d8';c.beginPath();c.moveTo(pad.l,H-pad.b);c.lineTo(W-pad.r,H-pad.b);c.stroke();
+  c.fillStyle='#eef1f6';c.strokeStyle='#94a3b8';c.lineWidth=1;
+  for(let i=0;i<k;i++){const x0=X(mn+i*bw),x1=X(mn+(i+1)*bw),y=Y(dens[i]);c.fillRect(x0+1,y,Math.max(0,x1-x0-2),H-pad.b-y);c.strokeRect(x0+1,y,Math.max(0,x1-x0-2),H-pad.b-y);}
+  c.strokeStyle='#3b4a63';c.lineWidth=2.6;c.beginPath();
+  for(let p=0;p<=180;p++){const xv=lo+(hi-lo)*p/180,yv=stdNormPdf((xv-m)/s)/s;p?c.lineTo(X(xv),Y(yv)):c.moveTo(X(xv),Y(yv));}c.stroke();
+  c.strokeStyle='#3b4a63';c.globalAlpha=.45;c.setLineDash([5,4]);c.beginPath();c.moveTo(X(m),pad.t);c.lineTo(X(m),H-pad.b);c.stroke();c.setLineDash([]);c.globalAlpha=1;
+  c.fillStyle='#71717a';c.font='11px "Malgun Gothic",sans-serif';c.textAlign='center';
+  for(let t=0;t<=4;t++){const xv=lo+(hi-lo)*t/4;c.fillText(fmt(xv,1),X(xv),H-pad.b+18);}
+  c.textAlign='left';
+  return cv.toDataURL('image/png');
+}
+function makeComparePNG(z1,z2){
+  const W=720,H=230,pad={l:30,r:30},lo=-3,hi=3,yA=95,yB=160;
+  const cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  c.fillStyle='#fff';c.fillRect(0,0,W,H);
+  const X=v=>pad.l+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W-pad.l-pad.r);
+  c.strokeStyle='#e4e4e7';c.lineWidth=2;[yA,yB].forEach(y=>{c.beginPath();c.moveTo(pad.l,y);c.lineTo(W-pad.r,y);c.stroke();});
+  c.fillStyle='#a1a1aa';c.font='10px "Malgun Gothic",sans-serif';c.textAlign='center';
+  for(let t=-3;t<=3;t++){c.fillText((t>0?'+':'')+t+'σ',X(t),H-10);c.strokeStyle='#d4d4d8';[yA,yB].forEach(y=>{c.beginPath();c.moveTo(X(t),y-4);c.lineTo(X(t),y+4);c.stroke();});}
+  c.strokeStyle='#d4d4d8';c.setLineDash([3,3]);c.beginPath();c.moveTo(X(0),yA-22);c.lineTo(X(0),yB+22);c.stroke();c.setLineDash([]);
+  c.textAlign='left';c.fillStyle='#52525b';c.font='bold 12px "Malgun Gothic",sans-serif';c.fillText(S.ind1,pad.l,yA-30);c.fillText(S.ind2,pad.l,yB-30);
+  function dot(z,y){const col=z>=0?'#3b4a63':'#94a3b8';c.fillStyle=col;c.beginPath();c.arc(X(z),y,8,0,7);c.fill();c.textAlign='center';c.font='bold 12px "Malgun Gothic",sans-serif';c.fillText(fmt(z,2)+'σ',X(z),y-13);}
+  dot(z1,yA);dot(z2,yB);
+  return cv.toDataURL('image/png');
+}
+
+/* ---- 편집 가능한 보고서(.doc) 내려받기 ---- */
+function ans(id){const e=document.getElementById(id);const v=e&&e.value.trim();return v?esc(v).replace(/\n/g,'<br>'):'<span style="color:#999;">(작성하지 않음)</span>';}
+
+/* ====== 최소 ZIP(저장 방식) + CRC32 — 진짜 .docx 생성용 ====== */
+const _crcTable=(()=>{const t=[];for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(bytes){let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=_crcTable[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function strBytes(str){return new TextEncoder().encode(str);}
+function zipStore(files){ // files: [{name, data(Uint8Array)}]
+  const enc=[];let offset=0;const central=[];
+  const u16=n=>[n&0xFF,(n>>8)&0xFF];
+  const u32=n=>[n&0xFF,(n>>8)&0xFF,(n>>16)&0xFF,(n>>24)&0xFF];
+  files.forEach(f=>{
+    const nameB=strBytes(f.name), data=f.data, crc=crc32(data);
+    const local=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0));
+    enc.push(new Uint8Array(local), nameB, data);
+    central.push({nameB,crc,size:data.length,offset});
+    offset += local.length + nameB.length + data.length;
+  });
+  const cdStart=offset; const cd=[];
+  central.forEach(c=>{
+    const rec=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c.crc),u32(c.size),u32(c.size),u16(c.nameB.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.offset));
+    cd.push(new Uint8Array(rec), c.nameB); offset += rec.length + c.nameB.length;
+  });
+  const cdSize=offset-cdStart;
+  const end=[].concat(u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(cdStart),u16(0));
+  const parts=enc.concat(cd,[new Uint8Array(end)]);
+  let total=0;parts.forEach(p=>total+=p.length);
+  const out=new Uint8Array(total);let pos=0;parts.forEach(p=>{out.set(p,pos);pos+=p.length;});
+  return out;
+}
+function dataURLtoBytes(durl){const b64=durl.split(',')[1];const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr;}
+function xmlEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
+
+function downloadReport(){
+  if(!S.loaded){alert('먼저 1단계에서 데이터를 불러온 뒤 보고서를 만들 수 있어요.');return;}
+  const v1=vals(1),v2=vals(2),fx=S.rows[S.focusIdx];
+  if(sdP(v1)===0||sdP(v2)===0){alert('두 지표 중 모든 값이 같은 지표가 있어(표준편차 0) 표준화·그래프를 만들 수 없습니다. 값이 서로 다른 지표로 데이터를 준비해 주세요.');return;}
+  const st=a=>({m:mean(a),v:varP(a),s:sdP(a),md:median(a),mn:Math.min(...a),mx:Math.max(...a)});
+  const s1=st(v1),s2=st(v2);
+  const z1=(fx.v1-s1.m)/s1.s, z2=(fx.v2-s2.m)/s2.s;
+  const N=v1.length;
+  const rankTop=(arr,val)=>arr.filter(x=>x>val).length+1;
+  const r1=rankTop(v1,fx.v1), r2=rankTop(v2,fx.v2);
+  const pctStr=(r,n)=>{const top=r/n*100; return top<=50?('상위 '+fmt(top,0)+'%'):('하위 '+fmt((n-r+1)/n*100,0)+'%');};
+  const img1=makeHistPNG(v1,S.ind1), img2=makeHistPNG(v2,S.ind2), imgC=makeComparePNG(z1,z2);
+  const today=new Date().toLocaleDateString('ko-KR');
+
+  // 학생 정보
+  const stu={
+    name:(document.getElementById('stuName')?.value||'').trim(),
+    id:(document.getElementById('stuId')?.value||'').trim()
+  };
+  // 직접계산 입력값 캡처(표본 기준)
+  const calc=captureCalc();
+  // 수행(작성) 여부 — 정답 여부는 학생 문서에 노출하지 않고 교사용 코드에만 담음
+  const calcDone=!!(calc&&isFinite(calc.userM)&&isFinite(calc.userV)&&isFinite(calc.userS));
+  const probDone=!!S.prob, cmpDone=!!S.cmp;
+  const recFilled=id=>{const e=document.getElementById(id);return !!(e&&e.value.trim());};
+  const allRecs=['rec1','rec2','rec3','rec4','rec5','rec6','rec7','recHardship'];
+  const recCount=allRecs.filter(recFilled).length;
+  const chk=ok=>ok?'✔ 수행':'○ 미수행';
+  const answer=id=>{const e=document.getElementById(id);const v=e&&e.value.trim();return v||'(작성하지 않음)';};
+  // 교사용 검증 코드(학생 정답 여부)
+  const vStatuses=gatherStatuses();
+  const vCode=vEncode(vStatuses, stu.name||stu.id||fx.name);
+
+  /* ---------- OOXML 빌더 ---------- */
+  const EMU=9525; // px→EMU
+  let media=[], rels=[], relSeq=0;
+  function addImage(durl,wpx,hpx){
+    relSeq++; const rid='rId'+(100+relSeq); const fn='image'+relSeq+'.png';
+    media.push({name:'word/media/'+fn, data:dataURLtoBytes(durl)});
+    rels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fn}"/>`);
+    const cx=Math.round(wpx*EMU), cy=Math.round(hpx*EMU);
+    return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${relSeq}" name="img${relSeq}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${relSeq}" name="img${relSeq}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+  }
+  // 문단 생성기
+  function run(text,opt={}){
+    const rpr=[];
+    if(opt.b)rpr.push('<w:b/>');
+    if(opt.color)rpr.push(`<w:color w:val="${opt.color}"/>`);
+    if(opt.sz)rpr.push(`<w:sz w:val="${opt.sz}"/>`);
+    const rprXml=rpr.length?`<w:rPr>${rpr.join('')}</w:rPr>`:'';
+    // 줄바꿈 처리
+    const lines=String(text).split('\n');
+    let inner='';
+    lines.forEach((ln,i)=>{ if(i>0)inner+='<w:br/>'; inner+=`<w:t xml:space="preserve">${xmlEsc(ln)}</w:t>`; });
+    return `<w:r>${rprXml}${inner}</w:r>`;
+  }
+  function P(runsXml,opt={}){
+    const ppr=[];
+    if(opt.style)ppr.push(`<w:pStyle w:val="${opt.style}"/>`);
+    if(opt.jc)ppr.push(`<w:jc w:val="${opt.jc}"/>`);
+    if(opt.shd)ppr.push(`<w:shd w:val="clear" w:fill="${opt.shd}"/>`);
+    if(opt.spacing)ppr.push(`<w:spacing w:before="${opt.spacing[0]}" w:after="${opt.spacing[1]}"/>`);
+    const pprXml=ppr.length?`<w:pPr>${ppr.join('')}</w:pPr>`:'';
+    return `<w:p>${pprXml}${runsXml}</w:p>`;
+  }
+  function H1(t){return P(run(t,{b:true,sz:'36',color:'3730A3'}),{jc:'center',spacing:[120,160]});}
+  function H2(t){return P(run(t,{b:true,sz:'26',color:'3730A3'}),{spacing:[220,80]});}
+  function body(t){return P(run(t,{sz:'21'}),{spacing:[20,60]});}
+  function ansP(t){return P(run(t,{sz:'21'}),{shd:'FCFCFF',spacing:[20,80]});}
+  function cap(t){return P(run(t,{b:true,sz:'18',color:'666666'}),{spacing:[100,20]});}
+  // 표 생성기: rows = [[{t,b,shd,num,colspan}...]...], widths in twips
+  function tbl(rows,widths){
+    const grid=widths.map(w=>`<w:gridCol w:w="${w}"/>`).join('');
+    let trs='';
+    rows.forEach(cells=>{
+      let tcs=''; let ci=0;
+      cells.forEach(c=>{
+        const span=c.colspan&&c.colspan>1?c.colspan:1;
+        let w=0; for(let k=0;k<span;k++) w+=(widths[ci+k]||0);
+        const shd=c.shd?`<w:shd w:val="clear" w:fill="${c.shd}"/>`:'';
+        const jc=c.num?'<w:jc w:val="right"/>':'';
+        const gs=span>1?`<w:gridSpan w:val="${span}"/>`:'';
+        const rpr=[]; if(c.b)rpr.push('<w:b/>'); if(c.color)rpr.push(`<w:color w:val="${c.color}"/>`);
+        const rprXml=rpr.length?`<w:rPr>${rpr.join('')}<w:sz w:val="18"/></w:rPr>`:'<w:rPr><w:sz w:val="18"/></w:rPr>';
+        tcs+=`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${gs}${shd}<w:tcBorders><w:top w:val="single" w:sz="4" w:color="C7C7D1"/><w:bottom w:val="single" w:sz="4" w:color="C7C7D1"/><w:left w:val="single" w:sz="4" w:color="C7C7D1"/><w:right w:val="single" w:sz="4" w:color="C7C7D1"/></w:tcBorders></w:tcPr><w:p><w:pPr>${jc}</w:pPr><w:r>${rprXml}<w:t xml:space="preserve">${xmlEsc(c.t)}</w:t></w:r></w:p></w:tc>`;
+        ci+=span;
+      });
+      trs+=`<w:tr>${tcs}</w:tr>`;
+    });
+    return `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${trs}</w:tbl>`;
+  }
+
+  // ====== 본문 구성 ======
+  let xml='';
+  xml+=H1('공공데이터를 활용한 정규분포 탐구 보고서');
+  xml+=tbl([
+    [{t:'이름',b:true,shd:'F4F4F5'},{t:stu.name||' '},{t:'학번',b:true,shd:'F4F4F5'},{t:stu.id||' '}],
+    [{t:'작성일',b:true,shd:'F4F4F5'},{t:today},{t:'관심 대상',b:true,shd:'F4F4F5'},{t:fx.name}],
+    [{t:'탐구 분야',b:true,shd:'F4F4F5'},{t:S.ind1+' · '+S.ind2,colspan:3}]
+  ],[1500,3500,1300,2400]);
+
+  xml+=H2('직접 수행 활동 이수 확인');
+  xml+=tbl([
+    [{t:'직접 수행 활동',b:true,shd:'EEF2FF'},{t:'수행',b:true,shd:'EEF2FF'},{t:'비고',b:true,shd:'EEF2FF'}],
+    [{t:'평균·분산·표준편차 직접 계산 (STEP 3)'},{t:chk(calcDone),b:true,color:calcDone?'15803D':'B45309'},{t:calcDone?('내가 계산한 값 — 평균 '+fmt(calc.userM)+', 분산 '+fmt(calc.userV)+', 표준편차 '+fmt(calc.userS)):'미수행'}],
+    [{t:'표준화(Z)·확률 직접 계산 (STEP 4)'},{t:chk(probDone),b:true,color:probDone?'15803D':'B45309'},{t:probDone?('내가 구한 값 — Z '+fmt(S.prob.userZ,2)+', 확률 '+fmt(S.prob.userP,3)):'미수행'}],
+    [{t:'두 지표 Z 비교 (STEP 5)'},{t:chk(cmpDone),b:true,color:cmpDone?'15803D':'B45309'},{t:cmpDone?('내가 구한 Z — '+S.ind1+' '+fmt(S.cmp.userZ1,2)+', '+S.ind2+' '+fmt(S.cmp.userZ2,2)):'미수행'}],
+    [{t:'탐구 기록 작성 (총 8개 항목)'},{t:chk(recCount>=8),b:true,color:recCount>=8?'15803D':'B45309'},{t:recCount+' / 8 항목 작성'}]
+  ],[3600,1500,3600]);
+  xml+=body('※ 위 표는 학생이 도구 안에서 직접 계산·작성을 수행했는지(수행 여부)를 자동 기록한 것입니다. 정답 여부는 별도로 표시하지 않습니다.');
+
+  xml+=H2('Ⅰ. 탐구 개요 — 선택한 분야와 두 지표');
+  xml+=ansP(answer('rec1'));
+
+  xml+=H2('Ⅱ. 데이터 설명');
+  xml+=body(`본 탐구는 ${S.rows.length}개 개체에 대해 두 지표 「${S.ind1}」, 「${S.ind2}」를 수집하여 분석하였다. 두 지표는 평균·분포(또는 단위)가 달라 원점수만으로는 직접 비교하기 어렵다. 자세히 들여다본 관심 대상은 ${fx.name}이다. (모집단 전체 기준, 분산·표준편차는 ÷n)`);
+  xml+=cap('[표 1] 기초 통계량');
+  xml+=tbl([
+    [{t:'지표',b:true,shd:'EEF2FF'},{t:'평균',b:true,shd:'EEF2FF'},{t:'분산',b:true,shd:'EEF2FF'},{t:'표준편차',b:true,shd:'EEF2FF'},{t:'중앙값',b:true,shd:'EEF2FF'},{t:'최솟값',b:true,shd:'EEF2FF'},{t:'최댓값',b:true,shd:'EEF2FF'}],
+    [{t:S.ind1,b:true},{t:fmt(s1.m),num:true},{t:fmt(s1.v),num:true},{t:fmt(s1.s),num:true},{t:fmt(s1.md),num:true},{t:fmt(s1.mn),num:true},{t:fmt(s1.mx),num:true}],
+    [{t:S.ind2,b:true},{t:fmt(s2.m),num:true},{t:fmt(s2.v),num:true},{t:fmt(s2.s),num:true},{t:fmt(s2.md),num:true},{t:fmt(s2.mn),num:true},{t:fmt(s2.mx),num:true}]
+  ],[2400,1100,1100,1300,1100,1100,1100]);
+  cap('[표 2] 수집한 데이터');
+  // 원자료 표(관심대상 강조)
+  xml+=cap('[표 2] 수집한 데이터 (관심 대상 강조)');
+  const dataRows=[[{t:'개체명',b:true,shd:'EEF2FF'},{t:S.ind1,b:true,shd:'EEF2FF'},{t:S.ind2,b:true,shd:'EEF2FF'}]];
+  S.rows.forEach(r=>{const hl=r.name===fx.name;dataRows.push([{t:r.name,b:hl,shd:hl?'EEF2FF':null},{t:fmt(r.v1),num:true},{t:fmt(r.v2),num:true}]);});
+  xml+=tbl(dataRows,[3400,2400,2400]);
+
+  xml+=H2('Ⅲ. 분포 관찰과 정규성 판단');
+  xml+=body('두 지표의 히스토그램에 같은 평균·표준편차의 정규곡선을 겹쳐 그려 정규분포 적합성을 판단하였다.');
+  xml+=cap('[그림 1] '+S.ind1); xml+=addImage(img1,520,274);
+  xml+=cap('[그림 2] '+S.ind2); xml+=addImage(img2,520,274);
+  xml+=P(run('▷ 판단 근거:',{b:true}),{spacing:[80,20]});
+  xml+=ansP(answer('rec2'));
+
+  xml+=H2('Ⅳ. 평균·분산·표준편차 — 직접 손으로 계산');
+  if(calcDone){
+    xml+=body(`전체 데이터에서 무작위로 ${calc.sample.length}개를 뽑아(${calc.ind}) 평균·분산·표준편차를 손으로 직접 계산하고, 전체 값과 비교하였다.`);
+    xml+=body('계산에 사용한 '+calc.sample.length+'개 값: '+calc.sample.join(', '));
+    xml+=tbl([
+      [{t:'항목',b:true,shd:'EEF2FF'},{t:'내가 계산한 값('+calc.sample.length+'개)',b:true,shd:'EEF2FF'},{t:'전체('+calc.popN+'개)',b:true,shd:'EEF2FF'},{t:'차이',b:true,shd:'EEF2FF'}],
+      [{t:'평균'},{t:fmt(calc.userM),num:true},{t:fmt(calc.popM),num:true},{t:fmt(calc.userM-calc.popM),num:true}],
+      [{t:'분산'},{t:fmt(calc.userV),num:true},{t:fmt(calc.popV),num:true},{t:fmt(calc.userV-calc.popV),num:true}],
+      [{t:'표준편차'},{t:fmt(calc.userS),num:true},{t:fmt(calc.popS),num:true},{t:fmt(calc.userS-calc.popS),num:true}]
+    ],[2300,2500,2400,1600]);
+  }
+  xml+=ansP(answer('rec3'));
+
+  xml+=H2('Ⅴ. 표준화와 확률 — 확률은 곡선 아래의 넓이');
+  if(probDone){ xml+=body(`${S.prob.focusName}의 ${S.prob.ind} 값 ${fmt(S.prob.X)}에 대해 내가 구한 Z ≈ ${fmt(S.prob.userZ,2)}, 구한 확률 ≈ ${fmt(S.prob.userP,3)} (${S.prob.dir==='ge'?'이상':'이하'}일 확률).`); }
+  xml+=ansP(answer('rec4'));
+
+  xml+=H2('Ⅵ. 두 지표 비교 — Z 점수로 상대적 위치 재기');
+  xml+=body(`관심 대상 ${fx.name}의 두 지표 Z 점수: ${S.ind1} ${fmt(z1,2)}σ, ${S.ind2} ${fmt(z2,2)}σ. 두 점수의 차이는 ${fmt(Math.abs(z1-z2),2)}σ이다.`);
+  xml+=body(`실제 순위(직접 셈): ${S.ind1}는 ${N}개 중 ${r1}위(${pctStr(r1,N)}), ${S.ind2}는 ${r2}위(${pctStr(r2,N)}).`);
+  xml+=cap('[그림 3] 두 지표에서의 상대적 위치(σ 단위)'); xml+=addImage(imgC,520,166);
+  xml+=ansP(answer('rec5'));
+
+  xml+=H2('Ⅶ. 데이터 분석과 결론'); xml+=ansP(answer('rec6'));
+  xml+=H2('Ⅷ. 분석 방법과 한계 돌아보기'); xml+=ansP(answer('rec7'));
+  xml+=H2('Ⅸ. 탐구하며 겪은 어려움과 극복 방안'); xml+=ansP(answer('recHardship'));
+
+  // ----- 교사 확인용 문서 검증 코드(잘 보이도록 표로 표시) -----
+  xml+=P(run(' '),{spacing:[300,0]});
+  xml+=H2('교사 확인용 검증 코드');
+  xml+=tbl([
+    [{t:'문서 검증 코드',b:true,shd:'EEF0F4'},{t:vCode,b:true,color:'3730A3'}]
+  ],[3000,4500]);
+  xml+=P(run('※ 위 코드는 교사 채점 확인용입니다. 학생의 직접 계산 입력값(STEP 3·4·5)이 정답과 얼마나 일치하는지가 담겨 있으며, 「교사용 검증 프로그램」에 입력하면 항목별 결과를 볼 수 있습니다. 학생은 이 코드를 수정·삭제하지 마세요.',{sz:'16',color:'888888'}),{spacing:[60,0]});
+
+  // ====== docx 패키지 ======
+  const documentXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><w:body>${xml}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+
+  const contentTypes=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+  const rootRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  const docRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${rels.join('')}</Relationships>`;
+
+  const files=[
+    {name:'[Content_Types].xml', data:strBytes(contentTypes)},
+    {name:'_rels/.rels', data:strBytes(rootRels)},
+    {name:'word/document.xml', data:strBytes(documentXml)},
+    {name:'word/_rels/document.xml.rels', data:strBytes(docRels)},
+    ...media
+  ];
+  const zipped=zipStore(files);
+  const blob=new Blob([zipped],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=`정규분포_탐구보고서_${(fx.name||'보고서').replace(/[\\/:*?"<>|]/g,'')}.docx`;
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},1500);
+}
+
+
+/* ============ KaTeX ============ */
+function renderMath(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'$$',right:'$$',display:true}],throwOnError:false});
+  }
+}
+
+/* ============ init ============ */
+window.addEventListener('DOMContentLoaded',()=>{renderStepper();go(0);drawWarm();setTimeout(renderMath,300);});
+</script>
+</body>
+</html>
