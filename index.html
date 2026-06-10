@@ -313,6 +313,10 @@ table.contrast td:first-child{font-weight:700;color:var(--accent);white-space:no
           <div><label class="field">이름</label><input type="text" id="stuName" placeholder="예: 홍길동" autocomplete="off"></div>
           <div><label class="field">학번</label><input type="text" id="stuId" placeholder="예: 30301" autocomplete="off"></div>
         </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;flex-wrap:wrap;">
+          <span id="saveNote" style="font-size:12px;color:var(--ok);">✓ 작성 내용은 이 브라우저에 자동 저장됩니다 (새로고침·재방문해도 유지)</span>
+          <button type="button" onclick="clearSaved()" style="font-size:12px;color:var(--ink-3);background:none;border:1px solid var(--border-strong);border-radius:7px;padding:5px 10px;cursor:pointer;">저장 내용 비우기</button>
+        </div>
       </div>
       <span class="stage-label">STEP 0 · 시작하기 전에</span>
       <h2>왜 표준화가 필요할까? — 생각 열기</h2>
@@ -797,7 +801,7 @@ function ingest(aoa){
   if(rows.length<15){fb('uploadFeedback','warn',`유효한 개체가 ${rows.length}개입니다. 분포를 보려면 20개 이상을 권장해요. 일단 진행은 가능합니다.`);}
   else {fb('uploadFeedback','ok',`좋아요! ${rows.length}개 개체, 두 지표(${esc(S.ind1)} / ${esc(S.ind2)})를 불러왔습니다.`);}
   S.rows=rows;S.focusIdx=0;S.loaded=true;S.calc=null;S.sample=[];
-  renderPreview();
+  renderPreview();saveState();
 }
 function loadSample(){
   // 연습용 가상 데이터: 세계 주요국 ①기대수명 ②삶의 만족도 (KOSIS 국제통계·OECD·WHO 등에서 찾을 수 있는 지표, 값은 가상)
@@ -813,7 +817,7 @@ function loadSample(){
   S.ind2='삶의 만족도(연습용·10점 만점)';
   S.rows=rows;S.focusIdx=0;S.loaded=true;S.calc=null;S.sample=[];
   fb('uploadFeedback','info',`연습용 가상 데이터(세계 ${names.length}개국의 기대수명·삶의 만족도)를 불러왔습니다. 실제 값이 아닙니다.`);
-  renderPreview();
+  renderPreview();saveState();
 }
 function renderPreview(){
   document.getElementById('dataPreview').style.display='block';
@@ -827,7 +831,7 @@ function renderPreview(){
   t.innerHTML=`<thead><tr><th>개체</th><th>${esc(S.ind1)}</th><th>${esc(S.ind2)}</th></tr></thead><tbody>`+
     S.rows.map((r,i)=>`<tr class="${i===S.focusIdx?'highlight':''}"><td>${esc(r.name)}</td><td>${fmt(r.v1)}</td><td>${fmt(r.v2)}</td></tr>`).join('')+`</tbody>`;
 }
-function setFocus(){S.focusIdx=+document.getElementById('focusSelect').value;const s5=document.getElementById('focusSelect5');if(s5)s5.value=S.focusIdx;renderPreview();}
+function setFocus(){S.focusIdx=+document.getElementById('focusSelect').value;const s5=document.getElementById('focusSelect5');if(s5)s5.value=S.focusIdx;renderPreview();saveState();}
 function fb(id,type,msg){const e=document.getElementById(id);e.className='fb show '+type;e.innerHTML=`<span>${type==='ok'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.4 2.4 4.6-4.8"/></svg>':type==='bad'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>':type==='warn'?'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h16.9a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>':'<svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'}</span><span>${msg}</span>`;}
 
 /* ============ 히스토그램 그리기 ============ */
@@ -1054,6 +1058,7 @@ function initCalcStage(){
   const sel=document.getElementById('calcIndicator');
   if(!S.loaded){sel.innerHTML='<option>데이터를 먼저 불러오세요</option>';return;}
   sel.innerHTML=`<option value="1">${esc(S.ind1)}</option><option value="2">${esc(S.ind2)}</option>`;
+  if(_restoredFields&&_restoredFields.calcIndicator)sel.value=_restoredFields.calcIndicator;
 }
 function resetSample(){const b=document.getElementById('sampleBox');if(b)b.style.display='none';const pr=document.getElementById('popReveal');if(pr){pr.className='fb';pr.innerHTML='';}}
 function drawSample(){
@@ -1073,6 +1078,7 @@ function drawSample(){
   const pr=document.getElementById('popReveal');if(pr){pr.className='fb';pr.innerHTML='';}
   S.calc=null;
   renderMath();
+  saveState();
 }
 /* 보고서 생성 시점에 직접계산 입력값을 캡처(표본 기준 정답과 비교 — 교사용 코드에만 반영) */
 function captureCalc(){
@@ -1156,6 +1162,7 @@ function initProbStage(){
   document.getElementById('probArea').style.display='block';
   const sel=document.getElementById('probIndicator');
   sel.innerHTML=`<option value="1">${esc(S.ind1)}</option><option value="2">${esc(S.ind2)}</option>`;
+  if(_restoredFields&&_restoredFields.probIndicator)sel.value=_restoredFields.probIndicator;
   const fsel=document.getElementById('probFocus');
   fsel.innerHTML=S.rows.map((r,i)=>`<option value="${i}">${esc(r.name)}</option>`).join('');
   fsel.value=S.focusIdx;
@@ -1166,7 +1173,7 @@ function setProbFocus(){
   S.focusIdx=+document.getElementById('probFocus').value;
   const s5=document.getElementById('focusSelect5');if(s5)s5.value=S.focusIdx;
   const s0=document.getElementById('focusSelect');if(s0)s0.value=S.focusIdx;
-  refreshProbContext();
+  refreshProbContext();saveState();
 }
 function onProbIndicatorChange(){ refreshProbContext(); }
 function refreshProbContext(){
@@ -1275,6 +1282,7 @@ function setFocus5(){
     return;
   }
   drawCompare(z1,z2,fx.name);
+  saveState();
 }
 function checkCompare(){
   if(!S.loaded||!S.rows[S.focusIdx])return;
@@ -1728,8 +1736,74 @@ function renderMath(){
   }
 }
 
+/* ============ 브라우저 자동 저장(localStorage) ============ */
+const SKEY='ndist_save_v1';
+let _saveTimer=null, _restoring=false, _restoredFields=null;
+function _saveFieldIds(){return ['stuName','stuId','calcIndicator','inMean','inVar','inSd',
+  'probIndicator','probFocus','probX','probDir','probZ','probAns',
+  'focusSelect','focusSelect5','cmpZ1','cmpZ2',
+  'rec1','rec2','rec3','rec4','rec5','rec6','rec7','recHardship'];}
+function snapshotFields(){const f={};_saveFieldIds().forEach(id=>{const e=document.getElementById(id);if(e&&e.value!=null&&e.value!=='')f[id]=e.value;});return f;}
+function saveState(){
+  if(_restoring)return;
+  try{
+    const fields=snapshotFields();
+    _restoredFields=fields;
+    const d={v:1,stage:cur,
+      S:{loaded:S.loaded,rows:S.rows,ind1:S.ind1,ind2:S.ind2,focusIdx:S.focusIdx,sample:S.sample,sampleInd:S.sampleInd||null},
+      fields};
+    localStorage.setItem(SKEY,JSON.stringify(d));
+    const el=document.getElementById('saveNote');
+    if(el)el.textContent='✓ 작성 내용이 이 브라우저에 저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){}
+}
+function scheduleSave(){clearTimeout(_saveTimer);_saveTimer=setTimeout(saveState,400);}
+function restoreState(){
+  let raw;try{raw=localStorage.getItem(SKEY);}catch(e){return false;}
+  if(!raw)return false;
+  let d;try{d=JSON.parse(raw);}catch(e){return false;}
+  if(!d)return false;
+  _restoring=true;
+  try{
+    if(d.S&&d.S.loaded&&Array.isArray(d.S.rows)&&d.S.rows.length){
+      S.rows=d.S.rows;S.ind1=d.S.ind1||'지표1';S.ind2=d.S.ind2||'지표2';
+      S.focusIdx=d.S.focusIdx||0;S.loaded=true;
+      S.sample=Array.isArray(d.S.sample)?d.S.sample:[];
+      if(d.S.sampleInd)S.sampleInd=d.S.sampleInd;
+      renderPreview();
+    }
+    const F=d.fields||{};_restoredFields=F;
+    const apply=()=>{Object.keys(F).forEach(id=>{const e=document.getElementById(id);if(e)e.value=F[id];});};
+    apply();
+    go(typeof d.stage==='number'?d.stage:0);
+    apply();
+    if(S.sample&&S.sample.length){
+      const sb=document.getElementById('sampleBox');
+      if(sb){sb.style.display='block';
+        const sv=document.getElementById('sampleVals');if(sv)sv.textContent=S.sample.join(',  ');
+        const fr=document.getElementById('formulaReminder');if(fr)fr.innerHTML=`평균 \\(m=\\dfrac{1}{n}\\sum x_i\\) , 분산 \\(=\\dfrac{1}{n}\\sum (x_i-m)^2\\) , 표준편차 \\(=\\sqrt{\\text{분산}}\\)  (n=${S.sample.length})`;
+      }
+    }
+    renderMath();
+  }finally{_restoring=false;}
+  return true;
+}
+function clearSaved(){
+  if(!confirm('이 브라우저에 저장된 작성 내용을 모두 지울까요? 되돌릴 수 없습니다.'))return;
+  try{localStorage.removeItem(SKEY);}catch(e){}
+  location.reload();
+}
+
 /* ============ init ============ */
-window.addEventListener('DOMContentLoaded',()=>{renderStepper();go(0);drawWarm();setTimeout(renderMath,300);});
+window.addEventListener('DOMContentLoaded',()=>{
+  renderStepper();
+  const restored=restoreState();
+  if(!restored)go(0);
+  drawWarm();
+  setTimeout(renderMath,300);
+  document.addEventListener('input',scheduleSave,true);
+  document.addEventListener('change',scheduleSave,true);
+});
 </script>
 </body>
 </html>
