@@ -417,8 +417,8 @@ table.contrast td:first-child{font-weight:700;color:var(--accent);white-space:no
 
       <div class="record">
         <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 1</div>
-        <label class="field">나는 어떤 분야의, 어떤 두 지표를 골랐고 왜 그것이 궁금한가?</label>
-        <textarea id="rec1" placeholder="예) OECD 국가별 기대수명과 삶의 만족도를 골랐다. 오래 사는 것과 삶의 만족이 함께 가는지, 우리나라는 어디쯤인지 궁금했기 때문이다. (KOSIS 국제통계·OECD에서 수집)"></textarea>
+        <label class="field">나는 어떤 분야의, 어떤 두 지표를 골랐는가? 그리고 그 두 지표로부터 <b>어떤 결과를 예측</b>하는가?</label>
+        <textarea id="rec1" placeholder="예) OECD 국가별 '기대수명'과 '삶의 만족도' 두 지표를 골랐다. 오래 사는 것과 삶의 만족이 함께 가는지 궁금했기 때문이다. 나는 두 지표가 대체로 같이 높을 것이고, 우리나라는 둘 다 상위권일 것이라고 예측한다. (KOSIS 국제통계·OECD에서 수집)"></textarea>
       </div>
     </div>
     <div class="nav-row"><button class="btn btn-ghost" onclick="go(0)">← 시작 화면</button><button class="btn btn-primary" onclick="go(2)">다음 단계 →</button></div>
@@ -613,8 +613,8 @@ table.contrast td:first-child{font-weight:700;color:var(--accent);white-space:no
 
       <div class="record">
         <div class="rl"><svg class="ic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> 탐구 기록 4</div>
-        <label class="field">내가 구한 확률은 <b>무엇을 뜻하는가?</b></label>
-        <textarea id="rec4" style="min-height:120px;" placeholder="예) P(X ≥ 83.7) ≈ 0.18은 '임의로 한 나라를 뽑을 때 우리나라보다 기대수명이 긴 나라일 확률이 약 18%'라는 뜻이다. 즉 우리나라는 전체에서 상위 약 18% 안에 드는 편이다. 곡선에서 그만큼의 넓이가 색칠되는 걸 보니, 확률이 '넓이'라는 게 분명해졌다."></textarea>
+        <label class="field">내가 구한 확률은 <b>무엇을 뜻하며,</b> 그로부터 <b>무엇을 알 수 있는가?</b></label>
+        <textarea id="rec4" style="min-height:120px;" placeholder="예) P(X ≥ 83.7) ≈ 0.18은 '임의로 한 나라를 뽑을 때 우리나라보다 기대수명이 긴 나라일 확률이 약 18%'라는 뜻이다. 이로부터 우리나라가 전체에서 상위 약 18% 안에 드는, 기대수명이 꽤 긴 편임을 알 수 있다. 곡선에서 그만큼의 넓이가 색칠되는 걸 보니 확률이 곧 '넓이'라는 것도 분명해졌다."></textarea>
       </div>
     </div>
     <div class="nav-row"><button class="btn btn-ghost" onclick="go(3)">← 이전</button><button class="btn btn-primary" onclick="go(5)">다음 단계 →</button></div>
@@ -1506,18 +1506,19 @@ function crc32(bytes){let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=_crcTabl
 function strBytes(str){return new TextEncoder().encode(str);}
 function zipStore(files){ // files: [{name, data(Uint8Array)}]
   const enc=[];let offset=0;const central=[];
+  const DT=0x6000, DD=0x5A21; // 2025-01-01 12:00 (유효한 DOS 날짜/시각)
   const u16=n=>[n&0xFF,(n>>8)&0xFF];
   const u32=n=>[n&0xFF,(n>>8)&0xFF,(n>>16)&0xFF,(n>>24)&0xFF];
   files.forEach(f=>{
     const nameB=strBytes(f.name), data=f.data, crc=crc32(data);
-    const local=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0));
+    const local=[].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(DT),u16(DD),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0));
     enc.push(new Uint8Array(local), nameB, data);
     central.push({nameB,crc,size:data.length,offset});
     offset += local.length + nameB.length + data.length;
   });
   const cdStart=offset; const cd=[];
   central.forEach(c=>{
-    const rec=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c.crc),u32(c.size),u32(c.size),u16(c.nameB.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.offset));
+    const rec=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(DT),u16(DD),u32(c.crc),u32(c.size),u32(c.size),u16(c.nameB.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.offset));
     cd.push(new Uint8Array(rec), c.nameB); offset += rec.length + c.nameB.length;
   });
   const cdSize=offset-cdStart;
@@ -1528,7 +1529,7 @@ function zipStore(files){ // files: [{name, data(Uint8Array)}]
   return out;
 }
 function dataURLtoBytes(durl){const b64=durl.split(',')[1];const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return arr;}
-function xmlEsc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
+function xmlEsc(s){return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));}
 
 function downloadReport(){
   if(!S.loaded){alert('먼저 1단계에서 데이터를 불러온 뒤 보고서를 만들 수 있어요.');return;}
@@ -1571,7 +1572,7 @@ function downloadReport(){
     media.push({name:'word/media/'+fn, data:dataURLtoBytes(durl)});
     rels.push(`<Relationship Id="${rid}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${fn}"/>`);
     const cx=Math.round(wpx*EMU), cy=Math.round(hpx*EMU);
-    return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${relSeq}" name="img${relSeq}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${relSeq}" name="img${relSeq}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    return `<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${relSeq}" name="img${relSeq}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${relSeq}" name="img${relSeq}"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="${rid}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
   }
   // 문단 생성기
   function run(text,opt={}){
@@ -1589,9 +1590,9 @@ function downloadReport(){
   function P(runsXml,opt={}){
     const ppr=[];
     if(opt.style)ppr.push(`<w:pStyle w:val="${opt.style}"/>`);
-    if(opt.jc)ppr.push(`<w:jc w:val="${opt.jc}"/>`);
     if(opt.shd)ppr.push(`<w:shd w:val="clear" w:fill="${opt.shd}"/>`);
     if(opt.spacing)ppr.push(`<w:spacing w:before="${opt.spacing[0]}" w:after="${opt.spacing[1]}"/>`);
+    if(opt.jc)ppr.push(`<w:jc w:val="${opt.jc}"/>`);
     const pprXml=ppr.length?`<w:pPr>${ppr.join('')}</w:pPr>`:'';
     return `<w:p>${pprXml}${runsXml}</w:p>`;
   }
@@ -1619,7 +1620,7 @@ function downloadReport(){
       });
       trs+=`<w:tr>${tcs}</w:tr>`;
     });
-    return `<w:tbl><w:tblPr><w:tblStyle w:val="TableGrid"/><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${trs}</w:tbl>`;
+    return `<w:tbl><w:tblPr><w:tblW w:w="0" w:type="auto"/></w:tblPr><w:tblGrid>${grid}</w:tblGrid>${trs}</w:tbl>`;
   }
 
   // ====== 본문 구성 ======
@@ -1652,12 +1653,20 @@ function downloadReport(){
     [{t:S.ind1,b:true},{t:fmt(s1.m),num:true},{t:fmt(s1.v),num:true},{t:fmt(s1.s),num:true},{t:fmt(s1.md),num:true},{t:fmt(s1.mn),num:true},{t:fmt(s1.mx),num:true}],
     [{t:S.ind2,b:true},{t:fmt(s2.m),num:true},{t:fmt(s2.v),num:true},{t:fmt(s2.s),num:true},{t:fmt(s2.md),num:true},{t:fmt(s2.mn),num:true},{t:fmt(s2.mx),num:true}]
   ],[2400,1100,1100,1300,1100,1100,1100]);
-  cap('[표 2] 수집한 데이터');
-  // 원자료 표(관심대상 강조)
-  xml+=cap('[표 2] 수집한 데이터 (관심 대상 강조)');
+  // 원자료 표(일부 발췌 · 관심대상 강조) — 데이터가 많으면 문서가 커지므로 일부만 표시
+  const MAXROWS=20, totalRows=S.rows.length;
+  let listed;
+  if(totalRows<=MAXROWS){ listed=S.rows; }
+  else{
+    listed=S.rows.slice(0,MAXROWS-1);
+    if(!listed.some(r=>r.name===fx.name)){ const f=S.rows.find(r=>r.name===fx.name); if(f) listed=listed.concat([f]); }
+  }
+  const truncated=listed.length<totalRows;
+  xml+=cap('[표 2] 수집한 데이터'+(truncated?(' (전체 '+totalRows+'개 중 '+listed.length+'개 발췌 · 관심 대상 강조)'):' (관심 대상 강조)'));
   const dataRows=[[{t:'개체명',b:true,shd:'EEF2FF'},{t:S.ind1,b:true,shd:'EEF2FF'},{t:S.ind2,b:true,shd:'EEF2FF'}]];
-  S.rows.forEach(r=>{const hl=r.name===fx.name;dataRows.push([{t:r.name,b:hl,shd:hl?'EEF2FF':null},{t:fmt(r.v1),num:true},{t:fmt(r.v2),num:true}]);});
+  listed.forEach(r=>{const hl=r.name===fx.name;dataRows.push([{t:r.name,b:hl,shd:hl?'EEF2FF':null},{t:fmt(r.v1),num:true},{t:fmt(r.v2),num:true}]);});
   xml+=tbl(dataRows,[3400,2400,2400]);
+  if(truncated){ xml+=body(`※ 데이터가 많아 전체 ${totalRows}개 중 ${listed.length}개만 표로 표시했습니다(문서 용량을 줄이기 위함). 평균·표준편차 등 통계량과 그래프·분석은 모두 전체 ${totalRows}개 데이터를 기준으로 계산되었으며, 전체 원자료는 업로드한 데이터 파일을 참고하세요.`); }
 
   xml+=H2('Ⅲ. 분포 관찰과 정규성 판단');
   xml+=body('두 지표의 히스토그램에 같은 평균·표준편차의 정규곡선을 겹쳐 그려 정규분포 적합성을 판단하였다.');
